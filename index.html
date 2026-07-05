@@ -1,10 +1,11 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-<title>Prymis — S&amp;P 500 Quality Steward v3</title>
+<title>Prymis — S&amp;P 500 Quality Steward v3.1</title>
 <style>
 :root{
   --deep:#0f0c0a;--panel:#1a1612;--panel2:#2e2218;--line:#3d3028;
@@ -27,13 +28,13 @@ button{border:0;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointe
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.kpi{background:#0f0c0a;border:1px solid var(--line);border-radius:10px;padding:12px}.kpi .k{color:var(--dim);font-size:.78rem}.kpi .v{color:var(--smoke);font-weight:800;margin-top:4px;word-break:break-word}.tag{display:inline-block;background:rgba(155,144,128,.18);color:var(--dim);border-radius:999px;padding:2px 8px;margin:2px;font-size:.75rem}.tag.good{background:rgba(16,185,129,.18);color:var(--good)}.tag.bad{background:rgba(239,68,68,.18);color:var(--bad)}.tag.warn{background:rgba(245,158,11,.18);color:var(--warn)}.tag.blue{background:rgba(96,165,250,.18);color:var(--blue)}.tag.purple{background:rgba(167,139,250,.18);color:var(--purple)}
 .output{background:#0f0c0a;border:1px solid var(--line);border-radius:10px;padding:14px;min-height:360px;max-height:calc(100vh - 220px);overflow:auto;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.84rem;color:var(--smoke)}
 .table{width:100%;border-collapse:collapse;background:#0f0c0a;border:1px solid var(--line);border-radius:10px;overflow:hidden}.table th,.table td{padding:9px;border-bottom:1px solid var(--line);font-size:.83rem;text-align:left;vertical-align:top}.table th{background:rgba(46,34,24,.42);color:var(--amber)}.table tr:last-child td{border-bottom:0}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}.right{text-align:right}.chart-wrap{background:#0f0c0a;border:1px solid var(--line);border-radius:10px;padding:10px}canvas{display:block;width:100%;height:330px;background:rgba(0,0,0,.17);border-radius:8px}.toast{position:fixed;right:18px;bottom:18px;background:var(--good);color:#fff;border-radius:8px;padding:12px 16px;font-weight:800;box-shadow:0 10px 30px rgba(0,0,0,.25);opacity:0;transform:translateY(22px);transition:.22s;z-index:99}.toast.show{opacity:1;transform:translateY(0)}.small-note{color:var(--dim);font-size:.78rem;margin-top:6px}.split{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}@media(max-width:640px){.split{grid-template-columns:1fr}}
-.storagebar{height:8px;border-radius:999px;background:#0f0c0a;border:1px solid var(--line);overflow:hidden;margin-top:6px}.storagebar > i{display:block;height:100%;background:linear-gradient(90deg,var(--good),var(--warn))}
+.storagebar{height:8px;border-radius:999px;background:#0f0c0a;border:1px solid var(--line);overflow:hidden;margin-top:6px}.storagebar > i{display:block;height:100%;background:linear-gradient(90deg,var(--good),var(--warn))}.hidden-file{display:none}.statusline{background:#0f0c0a;border:1px solid var(--line);border-radius:8px;padding:9px 10px;color:var(--smoke);font-size:.82rem;margin-top:8px}
 </style>
 </head>
 <body>
 <div class="header">
   <div>
-    <h1>🏛️ Prymis — S&amp;P 500 Quality Steward v3</h1>
+    <h1>🏛️ Prymis — S&amp;P 500 Quality Steward v3.1</h1>
     <div class="sub">Choose 10 S&amp;P 500 companies by fundamentals only. Benchmarking is scoreboard/accounting only. Cash is asset #11. Default decision: HOLD unless fundamentals demand change.</div>
   </div>
   <div class="row">
@@ -172,11 +173,21 @@ button{border:0;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointe
     <div class="tab-content" data-content="state">
       <div class="info"><h4>💾 Backup &amp; recovery</h4><p>Your data lives in this browser's storage, which can be wiped (cache clear, private mode, quota limits, file:// origins). <b style="color:var(--amber)">Click “Copy Full State” or “Download Full State” after every run you care about.</b> That backup is your paste-back recovery string: drop it into the Restore box on any machine and you're exactly where you left off. These export buttons read from memory, so they work even if storage is already full.</p></div>
       <div class="info warn"><h4>Storage usage</h4><p id="storage-text">—</p><div class="storagebar"><i id="storage-bar" style="width:0%"></i></div><p class="small-note" id="storage-hint"></p></div>
+      <fieldset><legend>🧠 Browser Persistence</legend>
+        <div class="info"><h4>Local persistent snapshot</h4><p>This app now keeps an explicit full-state browser snapshot in addition to the ledger/config keys. It auto-saves after important actions and on page close. Use this for ordinary same-browser recovery; use downloaded/uploaded JSON for cross-machine recovery.</p></div>
+        <div class="row">
+          <button class="btn-good" id="save-browser-snapshot">💽 Save Browser Snapshot</button>
+          <button class="btn-amber" id="load-browser-snapshot">↩️ Reload Browser Snapshot</button>
+        </div>
+        <div class="statusline" id="browser-persist-status">No browser snapshot loaded yet.</div>
+        <div class="small-note">Browser storage can still be wiped by cache clearing/private mode. A downloaded backup JSON remains the safest archive.</div>
+      </fieldset>
       <fieldset><legend>🛡️ Auto-save Folder</legend>
         <div class="info"><h4>Adjacent-folder backup</h4><p>Pick a folder once — ideally a folder next to this HTML file, such as <b>prymis_backups</b>. The folder keeps a latest full-state file, a daily canonical ledger that grows only once per calendar day, and timestamped archive snapshots for every save.</p></div>
         <div class="row">
           <button class="btn-amber" id="choose-autosave-folder">📁 Choose Backup Folder</button>
           <button class="btn-blue" id="autosave-now">💾 Auto-save Now</button>
+          <button class="btn-good btn-small" id="restore-from-autosave-folder">♻️ Restore Latest From Folder</button>
           <button class="btn-ghost btn-small" id="forget-autosave-folder">Forget Folder</button>
         </div>
         <div class="small-note" id="autosave-status">No backup folder connected.</div><div class="small-note">Folder policy: <b>latest.json</b> overwrites, <b>daily_ledger.json</b> appends only on a new calendar day and refreshes the same-day checkpoint, while <b>archive/</b> saves every snapshot.</div>
@@ -197,8 +208,16 @@ button{border:0;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointe
         <div class="small-note">In-page browser reminders fire while this app is open. The calendar file is the durable option when the app is closed. I also set a ChatGPT daily reminder separately.</div>
       </fieldset>
 
-      <fieldset><legend>Export / Back Up</legend><div class="row"><button class="btn-amber" id="download-state">⬇️ Download Full State</button><button class="btn-blue" id="copy-state">📋 Copy Full State (paste-back code)</button></div><div class="small-note">Full State includes config, the entire ledger, benchmark fields, your news input, and the current prompt. The downloaded <code>.json</code> file is the safest manual archive.</div></fieldset>
-      <fieldset><legend>Restore</legend><textarea id="restore-state" class="huge" placeholder="Paste a Full State backup (or a Ledger-only file) here, then click Restore..."></textarea><div class="row" style="margin-top:10px"><button class="btn-good" id="restore-btn">♻️ Restore</button><button class="btn-ghost" id="clear-restore">Clear Box</button></div><div class="small-note">Accepts either a Full State export or a plain Ledger export. A Ledger-only restore keeps your current settings and just reloads the timepoints.</div></fieldset>
+      <fieldset><legend>Export / Back Up</legend>
+        <div class="row">
+          <button class="btn-amber" id="download-state">⬇️ Download Full State</button>
+          <button class="btn-blue" id="copy-state">📋 Copy Full State (paste-back code)</button>
+          <button class="btn-good" id="upload-backup">📤 Upload Backup JSON</button>
+          <input class="hidden-file" id="backup-file-input" type="file" accept=".json,application/json,text/plain">
+        </div>
+        <div class="small-note">Full State includes config, the entire ledger, benchmark fields, your news input, and the current prompt. You can now restore by paste or by uploading the downloaded <code>.json</code> backup file.</div>
+      </fieldset>
+      <fieldset><legend>Restore</legend><textarea id="restore-state" class="huge" placeholder="Paste a Full State backup (or a Ledger-only file) here, then click Restore... You can also use Upload Backup JSON above."></textarea><div class="row" style="margin-top:10px"><button class="btn-good" id="restore-btn">♻️ Restore Pasted Backup</button><button class="btn-ghost" id="clear-restore">Clear Box</button></div><div class="small-note">Accepts Full State, Ledger-only, or a wrapper containing <code>ledger.points</code>. A Ledger-only restore keeps your current settings and reloads the timepoints.</div></fieldset>
       <fieldset><legend>Danger Zone</legend><div class="row"><button class="btn-bad" id="reset-btn-2">🧨 Reset Fresh Test Run</button></div><div class="small-note">Reset clears config, ledger, last paste guard, and current prompt. It does not touch downloaded files. Back up first.</div></fieldset>
     </div>
 
@@ -232,9 +251,10 @@ button{border:0;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointe
 (function(){
 'use strict';
 
-const APP_VERSION = 'prymis_sp500_quality_steward_v3';
+const APP_VERSION = 'prymis_sp500_quality_steward_v3_1';
 const KEY = {
   config:'prymis_quality_v3_config', ledger:'prymis_quality_v3_ledger', lastRaw:'prymis_quality_v3_last_raw', currentPrompt:'prymis_quality_v3_current_prompt', news:'prymis_quality_v3_news',
+  fullState:'prymis_quality_v3_full_state_snapshot',
   reminder:'prymis_fund_v2_reminder'
 };
 const DEFAULT_CONFIG = {
@@ -315,6 +335,7 @@ let CONFIG = loadJSON(KEY.config, DEFAULT_CONFIG);
 let LEDGER = loadJSON(KEY.ledger, DEFAULT_LEDGER);
 let currentPrompt = localStorage.getItem(KEY.currentPrompt) || '';
 let autoBackupTimer = null;
+let browserSnapshotTimer = null;
 let reminderTimer = null;
 let dirHandleCache = null;
 
@@ -480,7 +501,22 @@ async function autoSaveFullState(reason='auto',showToast=false){
     return true;
   }catch(e){console.error(e);toast('Auto-save failed. Reconnect the backup folder or use Download Full State.',false);updateAutoSaveStatus();return false;}
 }
+
+async function restoreFromAutoSaveFolder(){
+  const dir=await getAutoBackupDirHandle(true);
+  if(!dir){toast('No backup folder connected. Choose the folder first or upload a backup JSON.',false);return;}
+  try{
+    let txt='';
+    try{txt=await readTextFile(dir,'prymis_quality_steward_v3_latest.json');}
+    catch(e){txt=await readTextFile(dir,'prymis_quality_steward_v3_daily_ledger.json');}
+    const st=parseMaybeJSON(txt);
+    if(!applyStateObject(st,'Folder backup')){toast('Connected folder did not contain a readable backup.',false);return;}
+    document.getElementById('restore-state').value=txt;
+  }catch(e){console.error(e);toast('Could not read backup folder. Reconnect it or upload a JSON backup.',false);}
+}
+
 function queueAutoBackup(reason='auto'){
+  queueBrowserSnapshot(reason);
   clearTimeout(autoBackupTimer);
   autoBackupTimer=setTimeout(()=>autoSaveFullState(reason,false),650);
 }
@@ -695,48 +731,185 @@ if(!saveLedgerSafe()){
 }
 trySetItem(KEY.lastRaw,rawFingerprint(raw));document.getElementById('ai-json').value='';refreshAll();queueAutoBackup('recorded-point');maybeAutoFetchBenchmarkAfterRecord();toast('Recorded fundamentals timepoint ✓');}
 
+
+function statePointCount(st){return st&&st.ledger&&Array.isArray(st.ledger.points)?st.ledger.points.length:(st&&Array.isArray(st.points)?st.points.length:0);}
+function stateSavedTime(st){
+  const raw=st?.persistence?.saved_at||st?.auto_save?.saved_at||st?.exported_at||st?.ledger?.updated_at||st?.ledger?.created_at||'';
+  const t=Date.parse(raw);return Number.isFinite(t)?t:0;
+}
+function normalizeStateObject(st){
+  if(!st||typeof st!=='object')return null;
+  let cfg=null, led=null, prompt='', news=null;
+  if(st.config && st.ledger){cfg=st.config; led=st.ledger; prompt=st.current_prompt||''; news=st.market_news??'';}
+  else if(Array.isArray(st.points)){led=st;}
+  else if(st.ledger && Array.isArray(st.ledger.points)){led=st.ledger; cfg=st.config||null; prompt=st.current_prompt||''; news=st.market_news??null;}
+  else return null;
+  if(!led || !Array.isArray(led.points))return null;
+  return {cfg,led,prompt,news,raw:st};
+}
+function hydrateStateObject(st){
+  const n=normalizeStateObject(st); if(!n)return false;
+  if(n.cfg)CONFIG=Object.assign(clone(DEFAULT_CONFIG),n.cfg);
+  LEDGER=Object.assign(clone(DEFAULT_LEDGER),n.led||{});
+  if(!Array.isArray(LEDGER.points))LEDGER.points=[];
+  LEDGER.app_version=APP_VERSION;
+  LEDGER.starting_cash=safeNum(LEDGER.starting_cash, safeNum(CONFIG.starting_cash,10000));
+  currentPrompt=n.prompt||currentPrompt||'';
+  if(n.news!==null && n.news!==undefined)trySetItem(KEY.news,n.news);
+  return true;
+}
+function currentInMemoryState(){
+  return {app_version:APP_VERSION,exported_at:new Date().toISOString(),config:CONFIG,ledger:LEDGER,benchmark:LEDGER.benchmark||{},market_news:localStorage.getItem(KEY.news)||'',current_prompt:currentPrompt,persistence:{reason:'current-memory',saved_at:new Date().toISOString()}};
+}
+function updateBrowserPersistStatus(ok=null){
+  const el=document.getElementById('browser-persist-status'); if(!el)return;
+  const raw=localStorage.getItem(KEY.fullState)||'';
+  const st=parseMaybeJSON(raw);
+  if(st&&st.ledger&&Array.isArray(st.ledger.points)){
+    const pts=st.ledger.points.length;
+    const when=st.persistence?.saved_at||st.exported_at||'unknown time';
+    const reason=st.persistence?.reason||'manual/auto';
+    el.textContent=`Browser snapshot available: ${pts} ledger point(s), saved ${when}, reason: ${reason}${ok===false?' · localStorage may be full; IndexedDB fallback attempted':''}.`;
+  }else{
+    el.textContent='No localStorage snapshot found yet. Checking IndexedDB fallback…';
+    idbGet('latest_full_state_snapshot').then(idb=>{
+      if(idb&&idb.ledger&&Array.isArray(idb.ledger.points)){
+        const pts=idb.ledger.points.length;
+        const when=idb.persistence?.saved_at||idb.exported_at||'unknown time';
+        el.textContent=`IndexedDB fallback snapshot available: ${pts} ledger point(s), saved ${when}. Click Reload Browser Snapshot to restore it.`;
+      }else{
+        el.textContent='No browser snapshot found yet. Click Save Browser Snapshot or record a run.';
+      }
+    }).catch(()=>{el.textContent='No browser snapshot found yet. Click Save Browser Snapshot or record a run.';});
+  }
+}
+function saveBrowserSnapshot(reason='auto',showToast=false){
+  let ok=false;
+  try{CONFIG=getConfigFromUI();}catch(e){}
+  try{trySetItem(KEY.news,getNewsInput());}catch(e){}
+  try{trySetItem(KEY.currentPrompt,currentPrompt||'');}catch(e){}
+  try{
+    const st=fullState();
+    st.persistence={reason,saved_at:new Date().toISOString(),app_version:APP_VERSION,storage:'localStorage primary + IndexedDB fallback'};
+    ok=trySetItem(KEY.fullState,JSON.stringify(st));
+    idbSet('latest_full_state_snapshot',st).catch(()=>{});
+    updateBrowserPersistStatus(ok);
+    if(showToast)toast(ok?'Browser snapshot saved':'Browser localStorage is full; IndexedDB fallback attempted',ok);
+    return ok;
+  }catch(e){console.error(e);if(showToast)toast('Browser snapshot save failed',false);return false;}
+}
+function queueBrowserSnapshot(reason='auto'){
+  clearTimeout(browserSnapshotTimer);
+  browserSnapshotTimer=setTimeout(()=>saveBrowserSnapshot(reason,false),550);
+}
+async function loadBrowserSnapshot(showToast=true){
+  const local=parseMaybeJSON(localStorage.getItem(KEY.fullState)||'');
+  const idb=await idbGet('latest_full_state_snapshot').catch(()=>null);
+  const candidates=[local,idb].filter(x=>normalizeStateObject(x));
+  candidates.sort((a,b)=>{
+    const d=statePointCount(b)-statePointCount(a);
+    if(d!==0)return d;
+    return stateSavedTime(b)-stateSavedTime(a);
+  });
+  const st=candidates[0];
+  if(!st){if(showToast)toast('No browser snapshot found. Upload or paste a backup JSON instead.',false);return false;}
+  return applyStateObject(st,'Browser snapshot');
+}
+async function loadStartupSnapshotIfUseful(){
+  const local=parseMaybeJSON(localStorage.getItem(KEY.fullState)||'');
+  const idb=await idbGet('latest_full_state_snapshot').catch(()=>null);
+  const current=currentInMemoryState();
+  const candidates=[current,local,idb].filter(x=>normalizeStateObject(x));
+  candidates.sort((a,b)=>{
+    const d=statePointCount(b)-statePointCount(a);
+    if(d!==0)return d;
+    return stateSavedTime(b)-stateSavedTime(a);
+  });
+  const best=candidates[0];
+  if(best && best!==current && statePointCount(best)>=statePointCount(current)){
+    hydrateStateObject(best);
+    return true;
+  }
+  return false;
+}
+
 function fullState(){recomputeBenchmarks();return {app_version:APP_VERSION,exported_at:new Date().toISOString(),config:CONFIG,ledger:LEDGER,benchmark:LEDGER.benchmark||{},market_news:getNewsInput(),current_prompt:currentPrompt};}
 function downloadJSON(filename,obj){const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 function downloadLedger(){downloadJSON('prymis_quality_steward_v3_ledger.json',LEDGER);toast('Ledger downloaded');}
 function downloadState(){CONFIG=getConfigFromUI();trySetItem(KEY.news,getNewsInput());downloadJSON('prymis_quality_steward_v3_full_state.json',fullState());queueAutoBackup('manual-download-state');toast('Full state downloaded');}
 function copyState(){CONFIG=getConfigFromUI();navigator.clipboard.writeText(JSON.stringify(fullState(),null,2)).then(()=>toast('Full state copied — paste it into Restore to recover')).catch(()=>toast('Copy failed; use Download instead',false));}
+function applyStateObject(st,label='backup'){
+  if(!hydrateStateObject(st))return false;
+  saveJSON(KEY.config,CONFIG);
+  saveLedgerSafe();
+  trySetItem(KEY.currentPrompt,currentPrompt||'');
+  const n=normalizeStateObject(st);
+  if(n && n.news!==null && n.news!==undefined){trySetItem(KEY.news,n.news);setNewsInput(n.news);}
+  setConfigToUI(CONFIG);
+  if(currentPrompt)document.getElementById('output').textContent=currentPrompt;
+  else document.getElementById('output').innerHTML='<span style="color:var(--dim);font-style:italic">State restored. Click Generate Prompt.</span>';
+  recomputeBenchmarks();
+  refreshAll();
+  saveBrowserSnapshot('state-restored',false);
+  queueAutoBackup('state-restored');
+  toast(`${label} restored ✓`);
+  return true;
+}
 function restoreState(){
   const raw=document.getElementById('restore-state').value.trim();
   const st=parseMaybeJSON(raw);
-  if(!st||typeof st!=='object'){toast('Could not parse JSON',false);return;}
-  let cfg=null, led=null, prompt='', news=null;
-  if(st.config && st.ledger){ // full state export
-    cfg=st.config; led=st.ledger; prompt=st.current_prompt||''; news=st.market_news||'';
-  } else if(Array.isArray(st.points)){ // ledger-only export
-    led=st;
-  } else if(st.ledger && Array.isArray(st.ledger.points)){ // partial wrapper
-    led=st.ledger; cfg=st.config||null; prompt=st.current_prompt||''; news=st.market_news??null;
-  } else {
-    toast('Paste a Full State or a Ledger export.',false);return;
-  }
-  if(cfg)CONFIG=Object.assign(clone(DEFAULT_CONFIG),cfg);
-  LEDGER=Object.assign(clone(DEFAULT_LEDGER),led);
-  if(!Array.isArray(LEDGER.points))LEDGER.points=[];
-  currentPrompt=prompt||currentPrompt||'';
-  saveJSON(KEY.config,CONFIG);
-  saveLedgerSafe();
-  trySetItem(KEY.currentPrompt,currentPrompt);
-  if(news!==null){trySetItem(KEY.news,news);setNewsInput(news);}
-  setConfigToUI(CONFIG);
-  if(currentPrompt)document.getElementById('output').textContent=currentPrompt;
-  refreshAll();
-  queueAutoBackup('state-restored');
-  toast('State restored ✓');
+  if(!applyStateObject(st,'Pasted backup'))toast('Paste a Full State or a Ledger export.',false);
 }
-function resetFresh(){if(!confirm('Reset this fundamentals steward run and start fresh? Back up via State tab first if you want to keep it.'))return;CONFIG=clone(DEFAULT_CONFIG);LEDGER=clone(DEFAULT_LEDGER);currentPrompt='';localStorage.removeItem(KEY.lastRaw);localStorage.removeItem(KEY.currentPrompt);localStorage.removeItem(KEY.news);saveJSON(KEY.config,CONFIG);saveLedgerSafe();setConfigToUI(CONFIG);setNewsInput('');document.getElementById('ai-json').value='';document.getElementById('restore-state').value='';const bl=document.getElementById('benchmark-level');if(bl)bl.value='';const bd=document.getElementById('benchmark-date');if(bd)bd.value='';document.getElementById('output').innerHTML='<span style="color:var(--dim);font-style:italic">Fresh run. Click Generate Prompt.</span>';refreshAll();toast('Fresh reset complete');}
+function uploadBackupFile(){
+  const inp=document.getElementById('backup-file-input');
+  if(!inp){toast('Backup upload input missing',false);return;}
+  inp.value='';
+  inp.click();
+}
+function handleBackupFileUpload(evt){
+  const file=evt.target.files&&evt.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const txt=String(reader.result||'');
+    document.getElementById('restore-state').value=txt;
+    const st=parseMaybeJSON(txt);
+    if(!applyStateObject(st,`Uploaded backup: ${file.name}`))toast('Uploaded file was not a readable Prymis backup JSON.',false);
+  };
+  reader.onerror=()=>toast('Could not read backup file',false);
+  reader.readAsText(file);
+}
+function resetFresh(){if(!confirm('Reset this fundamentals steward run and start fresh? Back up via State tab first if you want to keep it.'))return;CONFIG=clone(DEFAULT_CONFIG);LEDGER=clone(DEFAULT_LEDGER);currentPrompt='';localStorage.removeItem(KEY.lastRaw);localStorage.removeItem(KEY.currentPrompt);localStorage.removeItem(KEY.news);localStorage.removeItem(KEY.fullState);idbDel('latest_full_state_snapshot').catch(()=>{});saveJSON(KEY.config,CONFIG);saveLedgerSafe();setConfigToUI(CONFIG);setNewsInput('');document.getElementById('ai-json').value='';document.getElementById('restore-state').value='';const bl=document.getElementById('benchmark-level');if(bl)bl.value='';const bd=document.getElementById('benchmark-date');if(bd)bd.value='';document.getElementById('output').innerHTML='<span style="color:var(--dim);font-style:italic">Fresh run. Click Generate Prompt.</span>';refreshAll();toast('Fresh reset complete');}
 function copyLast3(){navigator.clipboard.writeText(JSON.stringify((LEDGER.points||[]).slice(-3),null,2)).then(()=>toast('Last 3 copied'));}
 function launchAI(which){if(!currentPrompt){toast('Generate prompt first',false);return;}const urls={gpt:'https://chat.openai.com/',claude:'https://claude.ai/new',gemini:'https://gemini.google.com/'};navigator.clipboard.writeText(currentPrompt).then(()=>{window.open(urls[which]||urls.gpt,'_blank');toast('Prompt copied + opening');});}
 
-document.querySelectorAll('.tab').forEach(tab=>{tab.onclick=()=>{document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));tab.classList.add('active');document.querySelector(`[data-content="${tab.dataset.tab}"]`)?.classList.add('active');if(tab.dataset.tab==='state'){updateStorageMeter();updateAutoSaveStatus();updateReminderStatus();}};});
-document.getElementById('generate-btn').onclick=generatePrompt;document.getElementById('copy-btn').onclick=copyPrompt;document.getElementById('parse-btn').onclick=()=>{try{parseAndRecord();}catch(e){console.error(e);}};document.getElementById('copy-schema-btn').onclick=copySchema;document.getElementById('download-ledger').onclick=downloadLedger;document.getElementById('download-state').onclick=downloadState;document.getElementById('copy-state').onclick=copyState;document.getElementById('choose-autosave-folder').onclick=chooseAutoBackupFolder;document.getElementById('autosave-now').onclick=()=>autoSaveFullState('manual',true);document.getElementById('forget-autosave-folder').onclick=forgetAutoBackupFolder;document.getElementById('request-notifications').onclick=requestNotifications;document.getElementById('test-reminder').onclick=()=>showDisciplineReminder(true);document.getElementById('download-reminder-ics').onclick=downloadReminderICS;document.getElementById('record-benchmark-level').onclick=recordManualBenchmark;document.getElementById('fetch-benchmark-latest').onclick=()=>fetchBenchmarkForLatest(true);document.getElementById('backfill-benchmark').onclick=backfillBenchmarkFromFred;document.getElementById('clear-benchmark-latest').onclick=clearLatestBenchmark;document.getElementById('restore-btn').onclick=restoreState;document.getElementById('clear-restore').onclick=()=>{document.getElementById('restore-state').value='';};document.getElementById('copy-last3').onclick=copyLast3;document.getElementById('reset-btn-1').onclick=resetFresh;document.getElementById('reset-btn-2').onclick=resetFresh;document.querySelectorAll('.ai').forEach(b=>b.onclick=()=>launchAI(b.dataset.ai));
-['starting-cash','basket-size','initial-rule','require-weights','eligible-universe','base-prompt','benchmark-enabled','benchmark-symbol','benchmark-auto-fetch','benchmark-source-note'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{CONFIG=getConfigFromUI();saveJSON(KEY.config,CONFIG);LEDGER.starting_cash=CONFIG.starting_cash;recomputeBenchmarks();saveLedgerSafe();refreshAll();queueAutoBackup('settings-saved');toast('Settings saved');}));document.getElementById('market-news').addEventListener('input',()=>trySetItem(KEY.news,getNewsInput()));['reminder-enabled','reminder-time'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{saveReminderSettings();startReminderLoop();queueAutoBackup('reminder-settings');toast('Reminder settings saved');}));
-function init(){CONFIG=Object.assign(clone(DEFAULT_CONFIG),CONFIG||{});if(!LEDGER||!Array.isArray(LEDGER.points))LEDGER=clone(DEFAULT_LEDGER);LEDGER.app_version=APP_VERSION;LEDGER.starting_cash=LEDGER.starting_cash||CONFIG.starting_cash;setConfigToUI(CONFIG);setReminderToUI();setNewsInput(localStorage.getItem(KEY.news)||'');if(currentPrompt)document.getElementById('output').textContent=currentPrompt;recomputeBenchmarks();saveJSON(KEY.config,CONFIG);saveLedgerSafe();refreshAll();updateAutoSaveStatus();startReminderLoop();toast('Fundamentals steward loaded');}
-init();
+document.querySelectorAll('.tab').forEach(tab=>{tab.onclick=()=>{document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));tab.classList.add('active');document.querySelector(`[data-content="${tab.dataset.tab}"]`)?.classList.add('active');if(tab.dataset.tab==='state'){updateStorageMeter();updateAutoSaveStatus();updateBrowserPersistStatus();updateReminderStatus();}};});
+document.getElementById('generate-btn').onclick=generatePrompt;document.getElementById('copy-btn').onclick=copyPrompt;document.getElementById('parse-btn').onclick=()=>{try{parseAndRecord();}catch(e){console.error(e);}};document.getElementById('copy-schema-btn').onclick=copySchema;document.getElementById('download-ledger').onclick=downloadLedger;document.getElementById('download-state').onclick=downloadState;document.getElementById('copy-state').onclick=copyState;document.getElementById('upload-backup').onclick=uploadBackupFile;document.getElementById('backup-file-input').onchange=handleBackupFileUpload;document.getElementById('save-browser-snapshot').onclick=()=>saveBrowserSnapshot('manual-browser-save',true);document.getElementById('load-browser-snapshot').onclick=()=>loadBrowserSnapshot(true);document.getElementById('choose-autosave-folder').onclick=chooseAutoBackupFolder;document.getElementById('autosave-now').onclick=()=>autoSaveFullState('manual',true);document.getElementById('restore-from-autosave-folder').onclick=restoreFromAutoSaveFolder;document.getElementById('forget-autosave-folder').onclick=forgetAutoBackupFolder;document.getElementById('request-notifications').onclick=requestNotifications;document.getElementById('test-reminder').onclick=()=>showDisciplineReminder(true);document.getElementById('download-reminder-ics').onclick=downloadReminderICS;document.getElementById('record-benchmark-level').onclick=recordManualBenchmark;document.getElementById('fetch-benchmark-latest').onclick=()=>fetchBenchmarkForLatest(true);document.getElementById('backfill-benchmark').onclick=backfillBenchmarkFromFred;document.getElementById('clear-benchmark-latest').onclick=clearLatestBenchmark;document.getElementById('restore-btn').onclick=restoreState;document.getElementById('clear-restore').onclick=()=>{document.getElementById('restore-state').value='';};document.getElementById('copy-last3').onclick=copyLast3;document.getElementById('reset-btn-1').onclick=resetFresh;document.getElementById('reset-btn-2').onclick=resetFresh;document.querySelectorAll('.ai').forEach(b=>b.onclick=()=>launchAI(b.dataset.ai));
+['starting-cash','basket-size','initial-rule','require-weights','eligible-universe','base-prompt','benchmark-enabled','benchmark-symbol','benchmark-auto-fetch','benchmark-source-note'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{CONFIG=getConfigFromUI();saveJSON(KEY.config,CONFIG);LEDGER.starting_cash=CONFIG.starting_cash;recomputeBenchmarks();saveLedgerSafe();refreshAll();queueAutoBackup('settings-saved');toast('Settings saved');}));document.getElementById('market-news').addEventListener('input',()=>{trySetItem(KEY.news,getNewsInput());queueBrowserSnapshot('news-input');});['reminder-enabled','reminder-time'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{saveReminderSettings();startReminderLoop();queueAutoBackup('reminder-settings');toast('Reminder settings saved');}));
+async function init(){
+  CONFIG=Object.assign(clone(DEFAULT_CONFIG),CONFIG||{});
+  if(!LEDGER||!Array.isArray(LEDGER.points))LEDGER=clone(DEFAULT_LEDGER);
+  await loadStartupSnapshotIfUseful();
+  LEDGER.app_version=APP_VERSION;
+  LEDGER.starting_cash=LEDGER.starting_cash||CONFIG.starting_cash;
+  setConfigToUI(CONFIG);
+  setReminderToUI();
+  setNewsInput(localStorage.getItem(KEY.news)||'');
+  if(currentPrompt)document.getElementById('output').textContent=currentPrompt;
+  recomputeBenchmarks();
+  saveJSON(KEY.config,CONFIG);
+  saveLedgerSafe();
+  refreshAll();
+  updateAutoSaveStatus();
+  updateBrowserPersistStatus();
+  startReminderLoop();
+  saveBrowserSnapshot('startup-synced',false);
+  window.addEventListener('pagehide',()=>saveBrowserSnapshot('pagehide',false));
+  window.addEventListener('beforeunload',()=>saveBrowserSnapshot('beforeunload',false));
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveBrowserSnapshot('tab-hidden',false);});
+  toast('Fundamentals steward loaded');
+}
+init().catch(e=>{console.error(e);toast('Startup restore failed; upload or paste a backup JSON.',false);});
 })();
 </script>
 </body>
