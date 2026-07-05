@@ -1,13 +1,12 @@
 
 
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-<title>Prymis — S&amp;P 500 Quality Steward v3.3 GitHub-safe</title>
+<title>Prymis — S&amp;P 500 Quality Steward v3.4 Simple JSON</title>
 <style>
 :root{
   --deep:#0f0c0a;--panel:#1a1612;--panel2:#2e2218;--line:#3d3028;
@@ -184,18 +183,22 @@ button{border:0;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointe
         <div class="statusline" id="browser-persist-status">No browser snapshot loaded yet.</div>
         <div class="small-note">Browser storage can still be wiped by cache clearing/private mode. A downloaded backup JSON remains the safest archive.</div>
       </fieldset>
-      <fieldset><legend>🌐 GitHub Pages Backup</legend>
-        <div class="info"><h4>Hosted-page safe restore</h4><p>GitHub Pages cannot write to your repository and cannot silently reopen a local folder. For hosted use, put a backup JSON file in your repo and load it by URL, or upload/download JSON manually.</p></div>
-        <div class="input-group">
-          <label class="input-label">Backup JSON URL or relative path</label>
-          <input id="github-backup-url" value="prymis_backups/prymis_quality_steward_v3_latest.json" placeholder="Example: prymis_backups/prymis_quality_steward_v3_latest.json">
-        </div>
+      <fieldset><legend>📤 Working JSON File / Append Signal</legend>
+        <div class="info"><h4>GitHub-safe working file</h4><p>Pick a local backup JSON as the working file. The app loads it directly. After <b>Parse &amp; Record</b> processes new allocations, that is the append signal: the new point is appended to the ledger and the working JSON is saved back when the browser permits it. If write-back is unavailable, the app auto-downloads the updated full-state JSON.</p></div>
         <div class="row">
-          <button class="btn-good" id="load-github-backup">🌐 Load Backup From URL</button>
-          <button class="btn-ghost btn-small" id="copy-github-paths">📋 Copy suggested repo paths</button>
+          <button class="btn-good" id="open-working-json">📂 Open Working JSON</button>
+          <button class="btn-amber" id="save-working-json-now">💾 Save Working JSON Now</button>
+          <button class="btn-ghost" id="upload-backup">Load / Replace JSON</button>
+          <button class="btn-blue" id="append-backup">➕ Append Other JSON</button>
+          <input class="hidden-file" id="backup-file-input" type="file" accept=".json,application/json,text/plain">
+          <input class="hidden-file" id="append-file-input" type="file" accept=".json,application/json,text/plain">
         </div>
-        <div class="statusline" id="github-backup-status">GitHub mode: use URL restore, Upload Backup JSON, or Download Full State. Folder auto-save is browser-limited.</div>
-        <div class="small-note">Recommended repo path: <code>prymis_backups/prymis_quality_steward_v3_latest.json</code>. A hosted page can fetch that file if it is committed to the same GitHub Pages site. It still cannot save changes back to GitHub automatically.</div>
+        <div class="grid2" style="margin-top:10px">
+          <div class="input-group"><label class="input-label">If direct file write-back is unavailable</label><select id="auto-download-after-record"><option value="true" selected>Auto-download updated full-state JSON</option><option value="false">Only save browser snapshot</option></select></div>
+          <div class="input-group"><label class="input-label">Last append signal</label><input id="last-record-signal" readonly value="No allocations processed yet."></div>
+        </div>
+        <div class="statusline" id="json-upload-status">Ready. Open a working JSON for direct save-back, or use Load / Replace as a fallback.</div>
+        <div class="small-note">On GitHub Pages, direct save-back can work in Chromium browsers via the File System Access API after you click <b>Open Working JSON</b>. Safari/Firefox usually fall back to auto-download. A normal upload/file input can read a file but cannot write back to that same file.</div>
       </fieldset>
 
       <fieldset><legend>🛡️ Auto-save Folder</legend>
@@ -228,10 +231,8 @@ button{border:0;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointe
         <div class="row">
           <button class="btn-amber" id="download-state">⬇️ Download Full State</button>
           <button class="btn-blue" id="copy-state">📋 Copy Full State (paste-back code)</button>
-          <button class="btn-good" id="upload-backup">📤 Upload Backup JSON</button>
-          <input class="hidden-file" id="backup-file-input" type="file" accept=".json,application/json,text/plain">
         </div>
-        <div class="small-note">Full State includes config, the entire ledger, benchmark fields, your news input, and the current prompt. You can now restore by paste or by uploading the downloaded <code>.json</code> backup file.</div>
+        <div class="small-note">Full State includes config, the entire ledger, benchmark fields, your news input, and the current prompt. After Parse &amp; Record, the append signal saves to the working JSON file when possible, or auto-downloads the merged full-state JSON.</div>
       </fieldset>
       <fieldset><legend>Restore</legend><textarea id="restore-state" class="huge" placeholder="Paste a Full State backup (or a Ledger-only file) here, then click Restore... You can also use Upload Backup JSON above."></textarea><div class="row" style="margin-top:10px"><button class="btn-good" id="restore-btn">♻️ Restore Pasted Backup</button><button class="btn-ghost" id="clear-restore">Clear Box</button></div><div class="small-note">Accepts Full State, Ledger-only, or a wrapper containing <code>ledger.points</code>. A Ledger-only restore keeps your current settings and reloads the timepoints.</div></fieldset>
       <fieldset><legend>Danger Zone</legend><div class="row"><button class="btn-bad" id="reset-btn-2">🧨 Reset Fresh Test Run</button></div><div class="small-note">Reset clears config, ledger, last paste guard, and current prompt. It does not touch downloaded files. Back up first.</div></fieldset>
@@ -267,10 +268,11 @@ button{border:0;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointe
 (function(){
 'use strict';
 
-const APP_VERSION = 'prymis_sp500_quality_steward_v3_3_github_safe';
+const APP_VERSION = 'prymis_sp500_quality_steward_v3_5_working_json_append_signal';
 const KEY = {
   config:'prymis_quality_v3_config', ledger:'prymis_quality_v3_ledger', lastRaw:'prymis_quality_v3_last_raw', currentPrompt:'prymis_quality_v3_current_prompt', news:'prymis_quality_v3_news',
   fullState:'prymis_quality_v3_full_state_snapshot',
+  autoDownload:'prymis_quality_v3_auto_download_after_record',
   reminder:'prymis_fund_v2_reminder'
 };
 const DEFAULT_CONFIG = {
@@ -354,6 +356,8 @@ let autoBackupTimer = null;
 let browserSnapshotTimer = null;
 let reminderTimer = null;
 let dirHandleCache = null;
+let workingJSONHandle = null;
+let workingJSONName = '';
 
 function clone(o){return JSON.parse(JSON.stringify(o));}
 function loadJSON(key, def){try{const s=localStorage.getItem(key);return s?JSON.parse(s):clone(def);}catch(e){return clone(def);}}
@@ -480,8 +484,8 @@ async function writeDailyLedgerSnapshot(dir,state,reason='auto'){
   return daily;
 }
 async function chooseAutoBackupFolder(){
-  if(!window.isSecureContext){toast('Folder auto-save requires HTTPS or localhost. Use Upload/Download JSON or GitHub URL restore.',false);updateAutoSaveStatus();return;}
-  if(!window.showDirectoryPicker){toast('This browser does not support the folder picker. Use Upload/Download JSON or GitHub URL restore.',false);updateAutoSaveStatus();return;}
+  if(!window.isSecureContext){toast('Folder auto-save requires HTTPS or localhost. Use simple JSON load/append or Download Full State.',false);updateAutoSaveStatus();return;}
+  if(!window.showDirectoryPicker){toast('This browser does not support the folder picker. Use simple JSON load/append or Download Full State.',false);updateAutoSaveStatus();return;}
   try{
     const handle=await window.showDirectoryPicker({mode:'readwrite'});
     if(!await verifyDirPermission(handle)){toast('Folder permission was not granted.',false);return;}
@@ -498,7 +502,7 @@ async function autoSaveFullState(reason='auto',showToast=false){
   // Important for GitHub Pages: background auto-saves cannot request folder permission.
   // Only manual clicks may prompt; silent auto-save uses the folder only if permission is already granted.
   const dir=await getAutoBackupDirHandle(!!showToast);
-  if(!dir){if(showToast)toast('No usable backup folder permission. Use Upload/Download JSON or GitHub URL restore.',false);return false;}
+  if(!dir){if(showToast)toast('No usable backup folder permission. Use simple JSON load/append or Download Full State.',false);return false;}
   try{
     CONFIG=getConfigFromUI();
     const state=fullState();
@@ -553,7 +557,7 @@ async function loadBackupFromURL(){
     if(!res.ok)throw new Error('HTTP '+res.status);
     const txt=await res.text();
     const st=parseMaybeJSON(txt);
-    if(!applyStateObject(st,'URL backup')){
+    if(!applyStateObject(st,'JSON backup')){
       updateGitHubBackupStatus('The file loaded, but it was not a readable Prymis backup JSON.',false);
       return;
     }
@@ -585,11 +589,11 @@ function copyGitHubPaths(){
 function updateGitHubModeStatus(){
   const hosted = location.hostname && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
   if(location.hostname.endsWith('github.io')){
-    updateGitHubBackupStatus('GitHub Pages detected. Folder write-back is not available; use URL restore for committed JSON, or Upload/Download JSON.',true);
+    updateGitHubBackupStatus('GitHub Pages detected. Folder write-back is not available; use JSON load for committed JSON, or Upload/Download JSON.',true);
   }else if(hosted){
-    updateGitHubBackupStatus('Hosted page detected. Folder access may be limited; URL restore and Upload/Download JSON are the durable paths.',true);
+    updateGitHubBackupStatus('Hosted page detected. Folder access may be limited; simple JSON load/append and Download Full State are the durable paths.',true);
   }else{
-    updateGitHubBackupStatus('Local/localhost mode. Folder picker may work in Chrome/Edge; URL restore and Upload/Download JSON also work.',true);
+    updateGitHubBackupStatus('Local/localhost mode. Folder picker may work in Chrome/Edge; simple JSON load/append and Download Full State also work.',true);
   }
 }
 
@@ -601,8 +605,8 @@ function queueAutoBackup(reason='auto'){
 async function updateAutoSaveStatus(){
   const el=document.getElementById('autosave-status'); if(!el)return;
   const hosted = location.hostname && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
-  if(!window.isSecureContext){el.textContent='Folder auto-save unavailable: this page is not in a secure context. Use Upload/Download JSON or GitHub URL restore.';return;}
-  if(!window.showDirectoryPicker){el.textContent='Folder auto-save unavailable in this browser. Chrome/Edge support it best. Use Upload/Download JSON or GitHub URL restore.';return;}
+  if(!window.isSecureContext){el.textContent='Folder auto-save unavailable: this page is not in a secure context. Use simple JSON load/append or Download Full State.';return;}
+  if(!window.showDirectoryPicker){el.textContent='Folder auto-save unavailable in this browser. Chrome/Edge support it best. Use simple JSON load/append or Download Full State.';return;}
   const h=await idbGet(AUTO_DIR_KEY).catch(()=>null);
   if(!h){
     el.textContent=hosted
@@ -613,7 +617,7 @@ async function updateAutoSaveStatus(){
   let perm='prompt';
   try{if(h.queryPermission)perm=await h.queryPermission({mode:'readwrite'});}catch(e){}
   el.textContent=hosted
-    ? `Backup folder handle remembered, permission: ${perm}. GitHub Pages cannot silently reopen or write to a folder unless the browser grants permission. Use Auto-save Now after opening, or use GitHub URL / Upload JSON for durable restore.`
+    ? `Backup folder handle remembered, permission: ${perm}. GitHub Pages cannot silently reopen or write to a folder unless the browser grants permission. Use Auto-save Now after opening, or use simple JSON load/append for durable restore.`
     : `Backup folder remembered. Permission: ${perm}. Click Auto-save Now to refresh permission if needed. Daily ledger appends only on a new calendar day; archive saves every snapshot.`;
 }
 /* --------------------------------------------------- */
@@ -816,7 +820,7 @@ const banned=obj.banned_inputs_check||{};const badFlags=['price_performance_used
 if(!saveLedgerSafe()){
   toast('Recorded in memory, but browser storage is full. Auto-save or Download Full State before closing.',false);
 }
-trySetItem(KEY.lastRaw,rawFingerprint(raw));document.getElementById('ai-json').value='';refreshAll();queueAutoBackup('recorded-point');maybeAutoFetchBenchmarkAfterRecord();toast('Recorded fundamentals timepoint ✓');}
+trySetItem(KEY.lastRaw,rawFingerprint(raw));document.getElementById('ai-json').value='';refreshAll();queueAutoBackup('recorded-point');maybeAutoFetchBenchmarkAfterRecord();allocationAppendSignal(point,'recorded-point');toast('Recorded fundamentals timepoint ✓ — append signal sent');}
 
 
 function statePointCount(st){return st&&st.ledger&&Array.isArray(st.ledger.points)?st.ledger.points.length:(st&&Array.isArray(st.points)?st.points.length:0);}
@@ -947,6 +951,75 @@ function restoreState(){
   const st=parseMaybeJSON(raw);
   if(!applyStateObject(st,'Pasted backup'))toast('Paste a Full State or a Ledger export.',false);
 }
+
+function autoDownloadAfterRecordEnabled(){return (localStorage.getItem(KEY.autoDownload)||'true')==='true';}
+function setAutoDownloadControl(){
+  const el=document.getElementById('auto-download-after-record');
+  if(!el)return;
+  el.value=String(autoDownloadAfterRecordEnabled());
+  el.onchange=()=>{localStorage.setItem(KEY.autoDownload,el.value);updateJSONUploadStatus(el.value==='true'?'Auto-download after Parse & Record is on.':'Auto-download after Parse & Record is off. Browser snapshot still saves.',true);};
+}
+function setLastRecordSignal(msg){const el=document.getElementById('last-record-signal');if(el)el.value=msg;}
+async function verifyFileWritePermission(handle){
+  if(!handle)return false;
+  const opts={mode:'readwrite'};
+  try{
+    if(handle.queryPermission && await handle.queryPermission(opts)==='granted')return true;
+    if(handle.requestPermission && await handle.requestPermission(opts)==='granted')return true;
+  }catch(e){console.error(e);}
+  return false;
+}
+async function openWorkingJSONFile(){
+  if(!window.showOpenFilePicker){
+    updateJSONUploadStatus('This browser cannot open a writable working file. Using classic Load / Replace JSON instead.',false);
+    uploadBackupFile();
+    return;
+  }
+  try{
+    const handles=await window.showOpenFilePicker({multiple:false,types:[{description:'Prymis JSON backup',accept:{'application/json':['.json'],'text/plain':['.txt']}}]});
+    const handle=handles && handles[0];
+    if(!handle)return;
+    const file=await handle.getFile();
+    const txt=await file.text();
+    const st=parseMaybeJSON(txt);
+    const ok=applyStateObject(st,`Working JSON: ${file.name}`);
+    if(!ok){updateJSONUploadStatus(`Could not read ${file.name} as a Prymis backup.`,false);toast('Working JSON was not readable Prymis JSON.',false);return;}
+    workingJSONHandle=handle;
+    workingJSONName=file.name||'working JSON';
+    await verifyFileWritePermission(handle);
+    updateJSONUploadStatus(`Working JSON connected: ${workingJSONName}. Parse & Record will append and save back to this file when permitted.`,true);
+    setLastRecordSignal(`Working file loaded · ${LEDGER.points.length} point(s)`);
+  }catch(e){console.error(e);updateJSONUploadStatus('Working JSON open cancelled or blocked. Use Load / Replace JSON or Download Full State.',false);}
+}
+async function saveWorkingJSONNow(reason='manual'){
+  if(!workingJSONHandle)return false;
+  try{
+    if(!await verifyFileWritePermission(workingJSONHandle)){
+      updateJSONUploadStatus('Working JSON is loaded, but write permission was not granted. The app will auto-download if enabled.',false);
+      return false;
+    }
+    const writable=await workingJSONHandle.createWritable();
+    await writable.write(JSON.stringify(fullState(),null,2));
+    await writable.close();
+    updateJSONUploadStatus(`Saved ${workingJSONName||'working JSON'} after ${reason}. Ledger has ${(LEDGER.points||[]).length} point(s).`,true);
+    return true;
+  }catch(e){console.error(e);updateJSONUploadStatus('Could not write back to the working JSON file. The app will auto-download if enabled.',false);return false;}
+}
+function downloadLatestFullState(reason='recorded-point'){
+  const stamp=new Date().toISOString().slice(0,19).replace(/[T:]/g,'-');
+  downloadJSON(`prymis_quality_steward_v3_full_state_latest_${stamp}.json`,fullState());
+  updateJSONUploadStatus(`Updated full-state JSON downloaded after ${reason}. Ledger has ${(LEDGER.points||[]).length} point(s).`,true);
+}
+async function allocationAppendSignal(point,reason='recorded-point'){
+  const n=(LEDGER.points||[]).length;
+  const label=point?`${point.decision||'recorded'} · ${String(point.timestamp||'').slice(0,19)}`:reason;
+  setLastRecordSignal(`${label} · ledger point ${n}`);
+  updateJSONUploadStatus(`Append signal received from Parse & Record. New allocation point is in the ledger (${n} total). Saving backup now...`,true);
+  saveBrowserSnapshot(reason,false);
+  const wrote=await saveWorkingJSONNow(reason);
+  if(!wrote && autoDownloadAfterRecordEnabled())downloadLatestFullState(reason);
+  else if(!wrote)updateJSONUploadStatus(`Append signal completed in browser storage only. Download Full State to preserve the merged JSON. Ledger has ${n} point(s).`,false);
+}
 function uploadBackupFile(){
   const inp=document.getElementById('backup-file-input');
   if(!inp){toast('Backup upload input missing',false);return;}
@@ -961,9 +1034,84 @@ function handleBackupFileUpload(evt){
     const txt=String(reader.result||'');
     document.getElementById('restore-state').value=txt;
     const st=parseMaybeJSON(txt);
-    if(!applyStateObject(st,`Uploaded backup: ${file.name}`))toast('Uploaded file was not a readable Prymis backup JSON.',false);
+    const ok=applyStateObject(st,`Loaded JSON: ${file.name}`);
+    updateJSONUploadStatus(ok?`Loaded / replaced from ${file.name}. Ledger now has ${(LEDGER.points||[]).length} point(s). Classic upload is read-only; Parse & Record will auto-download unless you Open Working JSON.`:`Could not read ${file.name} as a Prymis backup.`,ok);
+    if(!ok)toast('Uploaded file was not a readable Prymis backup JSON.',false);
   };
   reader.onerror=()=>toast('Could not read backup file',false);
+  reader.readAsText(file);
+}
+function updateJSONUploadStatus(msg,ok=true){
+  const el=document.getElementById('json-upload-status');
+  if(!el)return;
+  el.textContent=msg;
+  el.style.borderColor=ok?'var(--line)':'var(--bad)';
+  el.style.color=ok?'var(--smoke)':'var(--bad)';
+}
+function appendBackupFile(){
+  const inp=document.getElementById('append-file-input');
+  if(!inp){toast('Append file input missing',false);return;}
+  inp.value='';
+  inp.click();
+}
+function pointStableKey(p){
+  if(!p||typeof p!=='object')return '';
+  if(p.point_id)return 'id:'+String(p.point_id);
+  const ts=String(p.timestamp||p.time||p.daily_ledger_date||'');
+  const nav=Number.isFinite(safeNum(p.nav,NaN))?safeNum(p.nav,0).toFixed(4):'';
+  const decision=String(p.decision||'');
+  const tickers=Object.keys(p.positions||{}).sort().join(',');
+  return [ts,decision,nav,tickers].join('|');
+}
+function appendStateObject(st,label='backup'){
+  const n=normalizeStateObject(st);
+  if(!n||!n.led||!Array.isArray(n.led.points))return false;
+  const incoming=n.led.points.filter(p=>p&&typeof p==='object').map(p=>clone(p));
+  if(!incoming.length){toast('That JSON has no ledger points to append.',false);return false;}
+  if((!LEDGER.points||!LEDGER.points.length) && n.cfg){CONFIG=Object.assign(clone(DEFAULT_CONFIG),n.cfg);}
+  if(!LEDGER||typeof LEDGER!=='object')LEDGER=clone(DEFAULT_LEDGER);
+  if(!Array.isArray(LEDGER.points))LEDGER.points=[];
+  const seen=new Set(LEDGER.points.map(pointStableKey));
+  let added=0, skipped=0;
+  incoming.forEach(p=>{
+    p.app_version=p.app_version||APP_VERSION;
+    const k=pointStableKey(p);
+    if(k && seen.has(k)){skipped++;return;}
+    LEDGER.points.push(p);
+    if(k)seen.add(k);
+    added++;
+  });
+  LEDGER.points.sort((a,b)=>String(a.timestamp||a.daily_ledger_date||'').localeCompare(String(b.timestamp||b.daily_ledger_date||'')));
+  LEDGER.app_version=APP_VERSION;
+  LEDGER.starting_cash=safeNum(LEDGER.starting_cash, safeNum(CONFIG.starting_cash,10000));
+  recomputeBenchmarks();
+  saveJSON(KEY.config,CONFIG);
+  saveLedgerSafe();
+  trySetItem(KEY.currentPrompt,currentPrompt||'');
+  setConfigToUI(CONFIG);
+  refreshAll();
+  saveBrowserSnapshot('json-appended',false);
+  queueAutoBackup('json-appended');
+  updateJSONUploadStatus(`${label} appended: ${added} new point(s), ${skipped} duplicate(s) skipped. Ledger now has ${LEDGER.points.length} point(s).`,true);
+  setLastRecordSignal(`Manual append · ${added} added · ${skipped} duplicate(s) · ${LEDGER.points.length} total`);
+  saveWorkingJSONNow('json-appended').then(wrote=>{if(!wrote && autoDownloadAfterRecordEnabled())downloadLatestFullState('json-appended');});
+  toast(`${added} new point(s) appended; ${skipped} duplicate(s) skipped`);
+  return true;
+}
+function handleAppendFileUpload(evt){
+  const file=evt.target.files&&evt.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const txt=String(reader.result||'');
+    document.getElementById('restore-state').value=txt;
+    const st=parseMaybeJSON(txt);
+    if(!appendStateObject(st,`Appended JSON: ${file.name}`)){
+      updateJSONUploadStatus(`Could not append ${file.name}. It must be a Full State, Ledger-only, or daily ledger JSON.`,false);
+      toast('Uploaded file was not appendable Prymis JSON.',false);
+    }
+  };
+  reader.onerror=()=>toast('Could not read append file',false);
   reader.readAsText(file);
 }
 function resetFresh(){if(!confirm('Reset this fundamentals steward run and start fresh? Back up via State tab first if you want to keep it.'))return;CONFIG=clone(DEFAULT_CONFIG);LEDGER=clone(DEFAULT_LEDGER);currentPrompt='';localStorage.removeItem(KEY.lastRaw);localStorage.removeItem(KEY.currentPrompt);localStorage.removeItem(KEY.news);localStorage.removeItem(KEY.fullState);idbDel('latest_full_state_snapshot').catch(()=>{});saveJSON(KEY.config,CONFIG);saveLedgerSafe();setConfigToUI(CONFIG);setNewsInput('');document.getElementById('ai-json').value='';document.getElementById('restore-state').value='';const bl=document.getElementById('benchmark-level');if(bl)bl.value='';const bd=document.getElementById('benchmark-date');if(bd)bd.value='';document.getElementById('output').innerHTML='<span style="color:var(--dim);font-style:italic">Fresh run. Click Generate Prompt.</span>';refreshAll();toast('Fresh reset complete');}
@@ -971,7 +1119,7 @@ function copyLast3(){navigator.clipboard.writeText(JSON.stringify((LEDGER.points
 function launchAI(which){if(!currentPrompt){toast('Generate prompt first',false);return;}const urls={gpt:'https://chat.openai.com/',claude:'https://claude.ai/new',gemini:'https://gemini.google.com/'};navigator.clipboard.writeText(currentPrompt).then(()=>{window.open(urls[which]||urls.gpt,'_blank');toast('Prompt copied + opening');});}
 
 document.querySelectorAll('.tab').forEach(tab=>{tab.onclick=()=>{document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));tab.classList.add('active');document.querySelector(`[data-content="${tab.dataset.tab}"]`)?.classList.add('active');if(tab.dataset.tab==='state'){updateStorageMeter();updateAutoSaveStatus();updateBrowserPersistStatus();updateReminderStatus();}};});
-document.getElementById('generate-btn').onclick=generatePrompt;document.getElementById('copy-btn').onclick=copyPrompt;document.getElementById('parse-btn').onclick=()=>{try{parseAndRecord();}catch(e){console.error(e);}};document.getElementById('copy-schema-btn').onclick=copySchema;document.getElementById('download-ledger').onclick=downloadLedger;document.getElementById('download-state').onclick=downloadState;document.getElementById('copy-state').onclick=copyState;document.getElementById('upload-backup').onclick=uploadBackupFile;document.getElementById('backup-file-input').onchange=handleBackupFileUpload;document.getElementById('save-browser-snapshot').onclick=()=>saveBrowserSnapshot('manual-browser-save',true);document.getElementById('load-browser-snapshot').onclick=()=>loadBrowserSnapshot(true);document.getElementById('choose-autosave-folder').onclick=chooseAutoBackupFolder;document.getElementById('autosave-now').onclick=()=>autoSaveFullState('manual',true);document.getElementById('restore-from-autosave-folder').onclick=restoreFromAutoSaveFolder;document.getElementById('forget-autosave-folder').onclick=forgetAutoBackupFolder;document.getElementById('load-github-backup').onclick=loadBackupFromURL;document.getElementById('copy-github-paths').onclick=copyGitHubPaths;document.getElementById('request-notifications').onclick=requestNotifications;document.getElementById('test-reminder').onclick=()=>showDisciplineReminder(true);document.getElementById('download-reminder-ics').onclick=downloadReminderICS;document.getElementById('record-benchmark-level').onclick=recordManualBenchmark;document.getElementById('fetch-benchmark-latest').onclick=()=>fetchBenchmarkForLatest(true);document.getElementById('backfill-benchmark').onclick=backfillBenchmarkFromFred;document.getElementById('clear-benchmark-latest').onclick=clearLatestBenchmark;document.getElementById('restore-btn').onclick=restoreState;document.getElementById('clear-restore').onclick=()=>{document.getElementById('restore-state').value='';};document.getElementById('copy-last3').onclick=copyLast3;document.getElementById('reset-btn-1').onclick=resetFresh;document.getElementById('reset-btn-2').onclick=resetFresh;document.querySelectorAll('.ai').forEach(b=>b.onclick=()=>launchAI(b.dataset.ai));
+document.getElementById('generate-btn').onclick=generatePrompt;document.getElementById('copy-btn').onclick=copyPrompt;document.getElementById('parse-btn').onclick=()=>{try{parseAndRecord();}catch(e){console.error(e);}};document.getElementById('copy-schema-btn').onclick=copySchema;document.getElementById('download-ledger').onclick=downloadLedger;document.getElementById('download-state').onclick=downloadState;document.getElementById('copy-state').onclick=copyState;document.getElementById('open-working-json').onclick=openWorkingJSONFile;document.getElementById('save-working-json-now').onclick=()=>saveWorkingJSONNow('manual').then(ok=>toast(ok?'Working JSON saved':'Working JSON save failed or unavailable',ok));document.getElementById('upload-backup').onclick=uploadBackupFile;document.getElementById('backup-file-input').onchange=handleBackupFileUpload;document.getElementById('append-backup').onclick=appendBackupFile;document.getElementById('append-file-input').onchange=handleAppendFileUpload;document.getElementById('save-browser-snapshot').onclick=()=>saveBrowserSnapshot('manual-browser-save',true);document.getElementById('load-browser-snapshot').onclick=()=>loadBrowserSnapshot(true);document.getElementById('choose-autosave-folder').onclick=chooseAutoBackupFolder;document.getElementById('autosave-now').onclick=()=>autoSaveFullState('manual',true);document.getElementById('restore-from-autosave-folder').onclick=restoreFromAutoSaveFolder;document.getElementById('forget-autosave-folder').onclick=forgetAutoBackupFolder;document.getElementById('request-notifications').onclick=requestNotifications;document.getElementById('test-reminder').onclick=()=>showDisciplineReminder(true);document.getElementById('download-reminder-ics').onclick=downloadReminderICS;document.getElementById('record-benchmark-level').onclick=recordManualBenchmark;document.getElementById('fetch-benchmark-latest').onclick=()=>fetchBenchmarkForLatest(true);document.getElementById('backfill-benchmark').onclick=backfillBenchmarkFromFred;document.getElementById('clear-benchmark-latest').onclick=clearLatestBenchmark;document.getElementById('restore-btn').onclick=restoreState;document.getElementById('clear-restore').onclick=()=>{document.getElementById('restore-state').value='';};document.getElementById('copy-last3').onclick=copyLast3;document.getElementById('reset-btn-1').onclick=resetFresh;document.getElementById('reset-btn-2').onclick=resetFresh;document.querySelectorAll('.ai').forEach(b=>b.onclick=()=>launchAI(b.dataset.ai));
 ['starting-cash','basket-size','initial-rule','require-weights','eligible-universe','base-prompt','benchmark-enabled','benchmark-symbol','benchmark-auto-fetch','benchmark-source-note'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{CONFIG=getConfigFromUI();saveJSON(KEY.config,CONFIG);LEDGER.starting_cash=CONFIG.starting_cash;recomputeBenchmarks();saveLedgerSafe();refreshAll();queueAutoBackup('settings-saved');toast('Settings saved');}));document.getElementById('market-news').addEventListener('input',()=>{trySetItem(KEY.news,getNewsInput());queueBrowserSnapshot('news-input');});['reminder-enabled','reminder-time'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{saveReminderSettings();startReminderLoop();queueAutoBackup('reminder-settings');toast('Reminder settings saved');}));
 async function init(){
   CONFIG=Object.assign(clone(DEFAULT_CONFIG),CONFIG||{});
@@ -981,6 +1129,7 @@ async function init(){
   LEDGER.starting_cash=LEDGER.starting_cash||CONFIG.starting_cash;
   setConfigToUI(CONFIG);
   setReminderToUI();
+  setAutoDownloadControl();
   setNewsInput(localStorage.getItem(KEY.news)||'');
   if(currentPrompt)document.getElementById('output').textContent=currentPrompt;
   recomputeBenchmarks();
@@ -988,7 +1137,6 @@ async function init(){
   saveLedgerSafe();
   refreshAll();
   updateAutoSaveStatus();
-  updateGitHubModeStatus();
   updateBrowserPersistStatus();
   startReminderLoop();
   saveBrowserSnapshot('startup-synced',false);
