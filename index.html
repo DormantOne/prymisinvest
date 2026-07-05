@@ -1,0 +1,743 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Prymis — S&amp;P 500 Quality Steward v3</title>
+<style>
+:root{
+  --deep:#0f0c0a;--panel:#1a1612;--panel2:#2e2218;--line:#3d3028;
+  --amber:#d4a574;--smoke:#a0b0a8;--ember:#e85d04;
+  --text:#e8e4dc;--dim:#9b9080;--good:#10b981;--bad:#ef4444;--warn:#f59e0b;
+  --blue:#60a5fa;--purple:#a78bfa;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Segoe UI,system-ui,-apple-system,sans-serif;background:linear-gradient(135deg,#1a1410,#0f0c0a 70%);color:var(--text);min-height:100vh;line-height:1.55}
+.header{position:sticky;top:0;z-index:50;background:rgba(26,22,18,.96);backdrop-filter:blur(8px);border-bottom:2px solid var(--line);padding:16px 22px;display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap}
+.header h1{font-family:Georgia,serif;font-size:1.62rem;background:linear-gradient(135deg,var(--amber),var(--smoke));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sub{font-size:.9rem;color:var(--dim);font-style:italic}.pill{display:inline-flex;align-items:center;gap:7px;background:#0f0c0a;border:1px solid var(--line);border-radius:999px;padding:7px 11px;color:var(--smoke);font-size:.82rem}.dot{width:9px;height:9px;border-radius:50%;background:var(--good);box-shadow:0 0 14px var(--good)}
+.container{max-width:1900px;margin:0 auto;padding:18px;display:grid;grid-template-columns:1.08fr .92fr;gap:18px}@media(max-width:1150px){.container{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 14px 42px rgba(0,0,0,.18)}
+.panel-head{background:var(--panel2);border-bottom:1px solid var(--line);padding:12px 16px;color:var(--amber);font-weight:700;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.panel-body{padding:16px}.tabs{display:flex;background:#130f0c;border-bottom:1px solid var(--line);flex-wrap:wrap}.tab{padding:10px 14px;cursor:pointer;color:var(--dim);border-bottom:2px solid transparent;font-size:.86rem}.tab:hover{color:var(--amber)}.tab.active{color:var(--amber);background:var(--panel);border-bottom-color:var(--amber)}.tab-content{display:none;padding:16px;max-height:calc(100vh - 150px);overflow:auto}.tab-content.active{display:block}
+fieldset{border:1px solid var(--line);background:rgba(46,34,24,.28);border-radius:10px;padding:14px;margin:0 0 14px}legend{color:var(--amber);font-weight:700;padding:0 8px;font-size:.92rem}label{display:block;margin:8px 0}.input-label{font-size:.82rem;color:var(--dim);display:block;margin-bottom:5px}.input-group{margin:10px 0}
+input,textarea,select{width:100%;background:#0f0c0a;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:10px;font:inherit;font-size:.9rem}textarea{resize:vertical;min-height:95px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}.large{min-height:150px}.huge{min-height:275px}.tiny{min-height:64px}input:focus,textarea:focus,select:focus{outline:none;border-color:var(--amber)}
+button{border:0;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:.15s transform,.15s opacity;font-size:.88rem}button:hover{transform:translateY(-1px)}button:disabled{opacity:.55;cursor:not-allowed;transform:none}.btn-primary{background:linear-gradient(135deg,var(--ember),#bc4703);color:#fff}.btn-amber{background:linear-gradient(135deg,var(--amber),#c99860);color:#15100c}.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--text)}.btn-ghost:hover{background:var(--panel2)}.btn-good{background:var(--good);color:#fff}.btn-bad{background:var(--bad);color:#fff}.btn-blue{background:var(--blue);color:#07111f}.btn-small{font-size:.8rem;padding:6px 10px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.grid{display:grid;gap:10px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+.info{background:rgba(212,165,116,.1);border:1px solid rgba(212,165,116,.55);border-radius:10px;padding:12px;margin-bottom:14px}.info h4{color:var(--amber);margin-bottom:4px}.info p,.info li{color:var(--dim);font-size:.86rem}.info.warn{background:rgba(245,158,11,.11);border-color:var(--warn)}.info.warn h4{color:var(--warn)}.info.danger{background:rgba(239,68,68,.11);border-color:var(--bad)}.info.danger h4{color:var(--bad)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.kpi{background:#0f0c0a;border:1px solid var(--line);border-radius:10px;padding:12px}.kpi .k{color:var(--dim);font-size:.78rem}.kpi .v{color:var(--smoke);font-weight:800;margin-top:4px;word-break:break-word}.tag{display:inline-block;background:rgba(155,144,128,.18);color:var(--dim);border-radius:999px;padding:2px 8px;margin:2px;font-size:.75rem}.tag.good{background:rgba(16,185,129,.18);color:var(--good)}.tag.bad{background:rgba(239,68,68,.18);color:var(--bad)}.tag.warn{background:rgba(245,158,11,.18);color:var(--warn)}.tag.blue{background:rgba(96,165,250,.18);color:var(--blue)}.tag.purple{background:rgba(167,139,250,.18);color:var(--purple)}
+.output{background:#0f0c0a;border:1px solid var(--line);border-radius:10px;padding:14px;min-height:360px;max-height:calc(100vh - 220px);overflow:auto;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.84rem;color:var(--smoke)}
+.table{width:100%;border-collapse:collapse;background:#0f0c0a;border:1px solid var(--line);border-radius:10px;overflow:hidden}.table th,.table td{padding:9px;border-bottom:1px solid var(--line);font-size:.83rem;text-align:left;vertical-align:top}.table th{background:rgba(46,34,24,.42);color:var(--amber)}.table tr:last-child td{border-bottom:0}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}.right{text-align:right}.chart-wrap{background:#0f0c0a;border:1px solid var(--line);border-radius:10px;padding:10px}canvas{display:block;width:100%;height:330px;background:rgba(0,0,0,.17);border-radius:8px}.toast{position:fixed;right:18px;bottom:18px;background:var(--good);color:#fff;border-radius:8px;padding:12px 16px;font-weight:800;box-shadow:0 10px 30px rgba(0,0,0,.25);opacity:0;transform:translateY(22px);transition:.22s;z-index:99}.toast.show{opacity:1;transform:translateY(0)}.small-note{color:var(--dim);font-size:.78rem;margin-top:6px}.split{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}@media(max-width:640px){.split{grid-template-columns:1fr}}
+.storagebar{height:8px;border-radius:999px;background:#0f0c0a;border:1px solid var(--line);overflow:hidden;margin-top:6px}.storagebar > i{display:block;height:100%;background:linear-gradient(90deg,var(--good),var(--warn))}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <h1>🏛️ Prymis — S&amp;P 500 Quality Steward v3</h1>
+    <div class="sub">Choose 10 S&amp;P 500 companies by fundamentals only. Benchmarking is scoreboard/accounting only. Cash is asset #11. Default decision: HOLD unless fundamentals demand change.</div>
+  </div>
+  <div class="row">
+    <span class="pill"><span class="dot"></span><span>Mode: fundamentals steward</span></span>
+    <span class="pill">Capital: <b id="header-capital">$10,000</b></span>
+  </div>
+</div>
+
+<div class="container">
+  <div class="panel">
+    <div class="tabs">
+      <div class="tab active" data-tab="run">🚀 Run</div>
+      <div class="tab" data-tab="ledger">📜 Ledger</div>
+      <div class="tab" data-tab="portfolio">💼 Basket</div>
+      <div class="tab" data-tab="research">🔬 Discipline</div>
+      <div class="tab" data-tab="state">💾 State</div>
+      <div class="tab" data-tab="settings">⚙️ Settings</div>
+    </div>
+
+    <div class="tab-content active" data-content="run">
+      <div class="info warn">
+        <h4>Experiment framing</h4>
+        <p>This is a research ledger, not financial advice. The AI is asked to select and maintain a 10-stock S&amp;P 500 quality basket using a ranked fundamentals hierarchy. Price is used only for share accounting and valuation-risk discipline, not performance chasing.</p>
+      </div>
+
+      <fieldset><legend>📊 Basket Dashboard</legend><div class="kpis">
+        <div class="kpi"><div class="k">Last Timestamp</div><div class="v" id="kpi-time">—</div></div>
+        <div class="kpi"><div class="k">Current NAV</div><div class="v" id="kpi-nav">$—</div></div>
+        <div class="kpi"><div class="k">Avg Quality Score</div><div class="v" id="kpi-quality">—</div></div>
+        <div class="kpi"><div class="k">Cash %</div><div class="v" id="kpi-cash">—</div></div>
+        <div class="kpi"><div class="k">Stocks</div><div class="v" id="kpi-holdings">—</div></div>
+        <div class="kpi"><div class="k">Largest Asset</div><div class="v" id="kpi-largest">—</div></div>
+        <div class="kpi"><div class="k">Last Decision</div><div class="v" id="kpi-decision">—</div></div>
+        <div class="kpi"><div class="k">Turnover</div><div class="v" id="kpi-turnover">—</div></div>
+        <div class="kpi"><div class="k">S&amp;P Value</div><div class="v" id="kpi-benchmark-value">—</div></div>
+        <div class="kpi"><div class="k">S&amp;P Return</div><div class="v" id="kpi-benchmark-return">—</div></div>
+        <div class="kpi"><div class="k">Excess Return</div><div class="v" id="kpi-excess-return">—</div></div>
+        <div class="kpi"><div class="k">Excess $</div><div class="v" id="kpi-excess-dollars">—</div></div>
+      </div><div id="kpi-tags" style="margin-top:10px"></div></fieldset>
+
+      <fieldset><legend>📥 Paste AI JSON Output</legend>
+        <textarea id="ai-json" class="huge" placeholder="Paste the AI's JSON object or ```json fenced block here..."></textarea>
+        <div class="row" style="margin-top:10px">
+          <button class="btn-good" id="parse-btn">🔍 Parse & Record</button>
+          <button class="btn-ghost btn-small" id="copy-schema-btn">📋 Copy JSON Schema</button>
+          <button class="btn-bad btn-small" id="reset-btn-1">🧨 Reset Fresh</button>
+        </div>
+        <div class="small-note">Validator accepts long-only shares, cash, prices for accounting, target weights summing near 1, and no more than 10 non-cash S&amp;P 500 tickers. It cannot independently verify S&amp;P 500 membership; the prompt forces the AI to cite its membership check.</div>
+      </fieldset>
+
+      <fieldset><legend>🗞️ News / Event Triage Input</legend>
+        <textarea id="market-news" class="large" placeholder="Optional. Paste headlines, earnings notes, 8-K/10-Q/10-K flags, lawsuits, management changes, debt actions, recalls, cyber events, regulatory actions, or product news. The prompt will force the AI to translate each item into a fundamentals impact check: ignore / watch / hold / reallocate."></textarea>
+        <div class="small-note">News is not a trading signal. It is only a trigger to check whether debt, cash flow, margins, moat, accounting, governance, or valuation burden changed.</div>
+      </fieldset>
+
+      <fieldset><legend>📏 S&amp;P 500 Benchmark Scoreboard</legend>
+        <div class="info"><h4>Scorekeeping only — from pasted JSON</h4><p>The app no longer asks you to hand-enter S&amp;P data and no longer depends on browser auto-fetch. The generated prompt asks the AI for a separate <code>benchmark_accounting</code> appendix. The parser stores that S&amp;P 500 price-index level inside the ledger and computes the shadow benchmark value, return, excess return, and excess dollars. This section is accounting only and is deliberately excluded from the stock-selection decision.</p></div>
+        <div style="display:none" aria-hidden="true">
+          <select id="benchmark-enabled"><option value="true" selected>On — track benchmark in ledger</option><option value="false">Off</option></select>
+          <select id="benchmark-symbol"><option value="SP500" selected>S&amp;P 500 price index</option></select>
+          <input id="benchmark-date" type="date">
+          <input id="benchmark-level" type="number" step="0.01" min="0">
+          <select id="benchmark-auto-fetch"><option value="false" selected>Manual only</option><option value="true">Try FRED automatically</option></select>
+          <input id="benchmark-source-note" value="AI JSON benchmark_accounting">
+          <button class="btn-good btn-small" id="record-benchmark-level">Record Level on Latest Point</button>
+          <button class="btn-blue btn-small" id="fetch-benchmark-latest">Fetch S&amp;P for Latest Point</button>
+          <button class="btn-amber btn-small" id="backfill-benchmark">Backfill All Ledger Points</button>
+          <button class="btn-ghost btn-small" id="clear-benchmark-latest">Clear Latest Benchmark</button>
+        </div>
+        <div class="small-note" id="benchmark-status">Benchmark not initialized.</div>
+        <div class="small-note">Expected pasted JSON field: <code>benchmark_accounting.sp500_price_index_level</code>. If it is missing, the validator will ask you to rerun the AI response rather than silently creating an unbenchmarked checkpoint.</div>
+      </fieldset>
+
+      <fieldset><legend>📈 NAV vs S&amp;P Scoreboard Chart</legend><div class="chart-wrap"><canvas id="chart" width="1100" height="430"></canvas></div><div class="small-note">This chart is scoreboard/bookkeeping only. The AI prompt requires S&P benchmark accounting but bans using benchmark movement, relative returns, price performance, momentum, or chart patterns as decision inputs.</div></fieldset>
+
+      <fieldset><legend>🧠 Latest Fundamentals Record</legend><textarea id="latest-thought" class="large" readonly placeholder="Latest fundamental thesis, hold/reallocate decision, scorecard, and risk triggers appear here..."></textarea></fieldset>
+    </div>
+
+    <div class="tab-content" data-content="ledger">
+      <div class="info"><h4>Ledger</h4><p>Each parsed JSON creates one timepoint. NAV is shares × accounting prices + cash. The intellectual score is the AI-supplied fundamentals score, not market performance.</p></div>
+      <div id="ledger-table"></div>
+      <fieldset style="margin-top:14px"><legend>Ledger Actions</legend><div class="row"><button class="btn-amber" id="download-ledger">⬇️ Download Ledger Only</button><button class="btn-ghost" id="copy-last3">📋 Copy Last 3 Points</button></div></fieldset>
+    </div>
+
+    <div class="tab-content" data-content="portfolio">
+      <div class="info"><h4>Current Basket</h4><p>There are 10 stocks plus CASH as the 11th asset. Initial deployment is equal-weighted across the 10 stocks unless the AI explicitly refuses because the fundamentals screen fails.</p></div>
+      <div id="portfolio-table"></div>
+    </div>
+
+    <div class="tab-content" data-content="research">
+      <div class="info"><h4>Fundamentals hierarchy</h4><p>The model is forced to rank fundamentals in order. Balance-sheet safety comes first; valuation is only a risk-control, not a prediction engine.</p></div>
+      <fieldset><legend>Order of Importance</legend>
+        <ol style="margin-left:22px;color:var(--dim);font-size:.9rem">
+          <li><b style="color:var(--text)">Balance-sheet safety:</b> net cash or low leverage, maturity safety, interest coverage, no refinancing trap.</li>
+          <li><b style="color:var(--text)">Free cash flow durability:</b> real cash generation, cash conversion, capex burden, self-funded reinvestment.</li>
+          <li><b style="color:var(--text)">Profitability quality:</b> ROIC/ROE, operating margin, gross margin durability, returns earned structurally.</li>
+          <li><b style="color:var(--text)">Revenue durability and moat:</b> recurring revenue, switching costs, network effects, brand, scale, patents, customer stickiness.</li>
+          <li><b style="color:var(--text)">Capital allocation and accounting quality:</b> reinvestment, buybacks/dividends, acquisitions, dilution discipline, clean adjustments.</li>
+          <li><b style="color:var(--text)">Governance and culture:</b> management quality, board quality, worker/customer evidence; mark uncertain when evidence is weak.</li>
+          <li><b style="color:var(--text)">Valuation as risk-control:</b> reduce only when price requires unrealistic fundamentals, not because of a recent price move.</li>
+        </ol>
+      </fieldset>
+      <fieldset><legend>Default-HOLD Stewardship Rule</legend>
+        <ul style="margin-left:18px;color:var(--dim);font-size:.9rem">
+          <li>Default decision is <b style="color:var(--good)">HOLD</b>.</li>
+          <li>Do not reselect the basket from scratch after the first run.</li>
+          <li>Choose REALLOCATE only for material fundamental deterioration, overpricing relative to fundamentals, inadequate evidence, or a clearly superior fundamentals candidate.</li>
+          <li>“Do nothing” is an acceptable and often preferred answer.</li>
+        </ul>
+      </fieldset>
+      <fieldset><legend>News Triage System</legend>
+        <table class="table">
+          <thead><tr><th>Event</th><th>Question</th><th>Default</th></tr></thead>
+          <tbody>
+            <tr><td>Earnings / guidance</td><td>Did revenue durability, margins, FCF, or leverage change?</td><td>Review</td></tr>
+            <tr><td>10-Q / 10-K</td><td>Did the balance sheet, cash conversion, dilution, or accounting quality change?</td><td>Review</td></tr>
+            <tr><td>8-K / material event</td><td>Does it affect governance, liabilities, debt, moat, or capital allocation?</td><td>Urgent review</td></tr>
+            <tr><td>CEO/CFO/auditor change</td><td>Governance or accounting risk?</td><td>Watch/review</td></tr>
+            <tr><td>Lawsuit / regulation</td><td>Cash liability, margin risk, moat impairment, or business-model change?</td><td>Review</td></tr>
+            <tr><td>Debt issuance / downgrade</td><td>Balance-sheet safety changed?</td><td>Review</td></tr>
+            <tr><td>Product failure / recall / cyber</td><td>Trust, liability, moat, or cash-flow durability changed?</td><td>Review</td></tr>
+            <tr><td>Price move alone</td><td>No fundamental evidence by itself.</td><td>Ignore</td></tr>
+          </tbody>
+        </table>
+      </fieldset>
+      <fieldset><legend>Banned Research Inputs</legend>
+        <ul style="margin-left:18px;color:var(--dim);font-size:.9rem">
+          <li>Past stock performance, momentum, technical analysis, moving averages, chart patterns.</li>
+          <li>Analyst price targets, short-term earnings-trade speculation, sector rotation, macro-timing.</li>
+          <li>“Beat the market” language. This lab is for fundamentals discipline.</li>
+          <li>Any real stock ticker in the JSON schema is forbidden; the schema uses placeholders only.</li>
+        </ul>
+      </fieldset>
+    </div>
+
+    <div class="tab-content" data-content="state">
+      <div class="info"><h4>💾 Backup &amp; recovery</h4><p>Your data lives in this browser's storage, which can be wiped (cache clear, private mode, quota limits, file:// origins). <b style="color:var(--amber)">Click “Copy Full State” or “Download Full State” after every run you care about.</b> That backup is your paste-back recovery string: drop it into the Restore box on any machine and you're exactly where you left off. These export buttons read from memory, so they work even if storage is already full.</p></div>
+      <div class="info warn"><h4>Storage usage</h4><p id="storage-text">—</p><div class="storagebar"><i id="storage-bar" style="width:0%"></i></div><p class="small-note" id="storage-hint"></p></div>
+      <fieldset><legend>🛡️ Auto-save Folder</legend>
+        <div class="info"><h4>Adjacent-folder backup</h4><p>Pick a folder once — ideally a folder next to this HTML file, such as <b>prymis_backups</b>. The folder keeps a latest full-state file, a daily canonical ledger that grows only once per calendar day, and timestamped archive snapshots for every save.</p></div>
+        <div class="row">
+          <button class="btn-amber" id="choose-autosave-folder">📁 Choose Backup Folder</button>
+          <button class="btn-blue" id="autosave-now">💾 Auto-save Now</button>
+          <button class="btn-ghost btn-small" id="forget-autosave-folder">Forget Folder</button>
+        </div>
+        <div class="small-note" id="autosave-status">No backup folder connected.</div><div class="small-note">Folder policy: <b>latest.json</b> overwrites, <b>daily_ledger.json</b> appends only on a new calendar day and refreshes the same-day checkpoint, while <b>archive/</b> saves every snapshot.</div>
+        <div class="small-note">Browser safety rule: a webpage cannot silently write beside itself. You must choose the folder once. Chromium-based browsers support this best; if unsupported, keep using Download Full State.</div>
+      </fieldset>
+
+      <fieldset><legend>⏰ Morning Discipline Reminder</legend>
+        <div class="grid2">
+          <div class="input-group"><label class="input-label">Daily reminder</label><select id="reminder-enabled"><option value="false">Off</option><option value="true">On</option></select></div>
+          <div class="input-group"><label class="input-label">Reminder time</label><input id="reminder-time" type="time" value="08:00"></div>
+        </div>
+        <div class="row">
+          <button class="btn-good" id="request-notifications">🔔 Allow Browser Notifications</button>
+          <button class="btn-ghost btn-small" id="test-reminder">Test Reminder</button>
+          <button class="btn-amber btn-small" id="download-reminder-ics">📅 Download Calendar Reminder</button>
+        </div>
+        <div class="small-note" id="reminder-status">Reminder is off.</div>
+        <div class="small-note">In-page browser reminders fire while this app is open. The calendar file is the durable option when the app is closed. I also set a ChatGPT daily reminder separately.</div>
+      </fieldset>
+
+      <fieldset><legend>Export / Back Up</legend><div class="row"><button class="btn-amber" id="download-state">⬇️ Download Full State</button><button class="btn-blue" id="copy-state">📋 Copy Full State (paste-back code)</button></div><div class="small-note">Full State includes config, the entire ledger, benchmark fields, your news input, and the current prompt. The downloaded <code>.json</code> file is the safest manual archive.</div></fieldset>
+      <fieldset><legend>Restore</legend><textarea id="restore-state" class="huge" placeholder="Paste a Full State backup (or a Ledger-only file) here, then click Restore..."></textarea><div class="row" style="margin-top:10px"><button class="btn-good" id="restore-btn">♻️ Restore</button><button class="btn-ghost" id="clear-restore">Clear Box</button></div><div class="small-note">Accepts either a Full State export or a plain Ledger export. A Ledger-only restore keeps your current settings and just reloads the timepoints.</div></fieldset>
+      <fieldset><legend>Danger Zone</legend><div class="row"><button class="btn-bad" id="reset-btn-2">🧨 Reset Fresh Test Run</button></div><div class="small-note">Reset clears config, ledger, last paste guard, and current prompt. It does not touch downloaded files. Back up first.</div></fieldset>
+    </div>
+
+    <div class="tab-content" data-content="settings">
+      <fieldset><legend>Core Experiment</legend>
+        <div class="grid2">
+          <div class="input-group"><label class="input-label">Starting Cash USD</label><input id="starting-cash" type="number" value="10000" min="100" step="100"></div>
+          <div class="input-group"><label class="input-label">Stock Basket Size</label><input id="basket-size" type="number" min="1" max="10" value="10"></div>
+        </div>
+        <div class="grid2">
+          <div class="input-group"><label class="input-label">Initial allocation rule</label><select id="initial-rule"><option value="equal_10">Equal across 10 stocks, cash 0%</option><option value="equal_11">Equal across 10 stocks plus cash</option></select></div>
+          <div class="input-group"><label class="input-label">Require target weights?</label><select id="require-weights"><option value="true">Yes</option><option value="false">No</option></select></div>
+        </div>
+      </fieldset>
+      <fieldset><legend>S&amp;P 500 Universe Rule</legend><textarea id="eligible-universe" class="large"></textarea></fieldset>
+      <fieldset><legend>Base Research Prompt</legend><textarea id="base-prompt" class="huge"></textarea></fieldset>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span>AI Prompt Builder</span><span class="tag purple">ticker-neutral v2</span></div>
+    <div class="panel-body">
+      <div class="row" style="margin-bottom:12px"><button class="btn-primary" id="generate-btn">🧠 Generate Prompt</button><button class="btn-amber" id="copy-btn">📋 Copy</button><button class="btn-ghost btn-small ai" data-ai="gpt">Open GPT</button><button class="btn-ghost btn-small ai" data-ai="claude">Claude</button><button class="btn-ghost btn-small ai" data-ai="gemini">Gemini</button></div>
+      <div id="output" class="output"><span style="color:var(--dim);font-style:italic">Click Generate Prompt. First run: select 10 S&amp;P 500 stocks by fundamentals. Later runs: default HOLD unless fundamentals, valuation burden, or evidence quality demand REALLOCATE. Cash is asset #11.</span></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+const APP_VERSION = 'prymis_sp500_quality_steward_v3';
+const KEY = {
+  config:'prymis_quality_v3_config', ledger:'prymis_quality_v3_ledger', lastRaw:'prymis_quality_v3_last_raw', currentPrompt:'prymis_quality_v3_current_prompt', news:'prymis_quality_v3_news',
+  reminder:'prymis_fund_v2_reminder'
+};
+const DEFAULT_CONFIG = {
+  starting_cash:10000,
+  basket_size:10,
+  initial_rule:'equal_10',
+  require_weights:true,
+  benchmark_enabled:true,
+  benchmark_symbol:'SP500',
+  benchmark_auto_fetch:false,
+  benchmark_source_note:'AI JSON benchmark_accounting',
+  benchmark_require_in_json:true,
+  eligible_universe:[
+    'Eligible universe: current S&P 500 constituents only.',
+    'The AI must verify that every selected ticker is currently in the S&P 500 at the time of research.',
+    'Allowed assets: exactly 10 S&P 500 common-stock tickers plus CASH as explicit asset #11.',
+    'Not allowed: ETFs, non-S&P 500 stocks, options, futures, crypto, shorts, leverage, margin.',
+    'Cash is a real allocation bucket. Use cash only when fundamentals evidence is inadequate, a holding should be reduced, or valuation is too demanding for the fundamentals.'
+  ].join('\n'),
+  base_prompt:[
+    'SYSTEM / ROLE',
+    'You are a fundamentals-only S&P 500 quality-basket steward. This is NOT financial advice.',
+    'Your job is not to chase performance. Your job is to build and maintain a disciplined basket of high-quality companies.',
+    'Do not anchor on any example ticker. The schema uses placeholders only. Replace placeholders with researched current S&P 500 constituents.',
+    '',
+    'CORE MISSION',
+    '- Select exactly 10 current S&P 500 companies with unusually strong fundamentals.',
+    '- Cash is the 11th asset.',
+    '- Starting capital is $10,000.',
+    '- First run: deploy evenly according to the initial allocation rule provided below.',
+    '- Later runs: answer exactly one decision question: HOLD or REALLOCATE.',
+    '- Default later-run answer is HOLD unless fundamentals demand action.',
+    '',
+    'FUNDAMENTALS HIERARCHY — APPLY IN THIS ORDER',
+    '1) Balance-sheet safety: net cash or low leverage, debt maturity safety, interest coverage, no refinancing trap.',
+    '2) Free-cash-flow durability: real cash generation, cash conversion, capex burden, ability to self-fund reinvestment.',
+    '3) Profitability quality: ROIC/ROE, operating margin, gross margin durability, returns on capital, structural not temporary profitability.',
+    '4) Revenue durability, moat, and necessity: recurring revenue, switching costs, network effects, brand, scale, patents, customer stickiness, reinvestment runway, and whether demand is structurally necessary or merely situation-dependent.',
+    '   - Situation-independent demand is more durable: mission-critical software, regulated/required infrastructure, essential healthcare, payments rails, safety/compliance workflows, indispensable data, or everyday low-cost necessities.',
+    '   - Situation-dependent demand is lower quality unless proven otherwise: fads, discretionary hype cycles, one-time booms, capital-market bubbles, luxury/novelty demand, or "tulip-like" demand that disappears when conditions change.',
+    '   - Necessity alone is not enough. A needed product can still be a bad business if it is commodity-like, overregulated, overlevered, capital-intensive, or lacks pricing power.',
+    '5) Capital allocation and accounting quality: reinvestment, buybacks/dividends, acquisitions, dilution discipline, clean accounting, no aggressive adjustments.',
+    '6) Governance and culture: management quality, board quality, treatment of workers/customers, current credible evidence only; otherwise mark uncertain.',
+    '7) Valuation as a fundamental risk-control: use valuation only to ask whether the current price requires unrealistic fundamentals. Do not use it for performance prediction.',
+    '   - Run a valuation-outlier stress test: trailing/forward P/E, EV/EBITDA where relevant, FCF yield, normalized earnings power, cyclicality, one-time items, stock-based compensation, dilution, and whether the multiple requires heroic growth.',
+    '   - A high P/E is not automatically bad if reinvestment runway, margins, balance sheet, and durability justify it; a low P/E is not automatically good if earnings are cyclical, melting, levered, or accounting-distorted.',
+    '',
+    'BANNED INPUTS',
+    '- Do not use stock price performance, momentum, technical analysis, moving averages, chart patterns, relative strength, or recent return ranking.',
+    '- Do not use analyst price targets as a reason to buy, hold, reduce, or sell.',
+    '- Do not optimize for beating SPY or any benchmark.',
+    '- Do not use S&P 500 benchmark movement, relative returns, outperformance, underperformance, or scoreboard status as a reason to buy, hold, reduce, sell, or replace.',
+    '- Current price is allowed only for share-count/NAV accounting and valuation-risk sanity checks.',
+    '- Always refresh current prices each run from live data for accounting; never reuse the prior run\'s prices.',
+    '',
+    'PRICE ACCOUNTING RULE',
+    '- On every run (including HOLD), refresh the accounting price for every non-cash holding to the most recent available quote as of the research date using live data.',
+    '- Never carry over the prior run\'s accounting prices; after refreshing, recompute NAV and target_weights from the refreshed prices.',
+    '- Refreshing prices is accounting/valuation-sanity only and is NOT a performance signal; price moves alone must not drive HOLD or REALLOCATE.',
+    '',
+    'DEFAULT-HOLD / REALLOCATE RULE',
+    '- If fundamentals have not materially changed, choose HOLD.',
+    '- Do nothing is an acceptable and often preferred decision.',
+    '- Do not re-select from scratch after a basket exists.',
+    '- Choose REALLOCATE only for fundamentals-only reasons: balance-sheet deterioration, FCF deterioration, rising leverage, governance/culture degradation, accounting concern, moat/margin erosion, or overpricing relative to fundamentals.',
+    '- Replacing one of the 10 stocks is allowed only when the replaced company fails the fundamentals screen or a clearly superior S&P 500 fundamentals candidate is found.',
+    '- Explain each weight change in plain language and map it to the fundamentals hierarchy.',
+    '',
+    'NEWS TRIAGE RULE',
+    '- News is not a trading signal. News is only a prompt to check whether a fundamental pillar changed.',
+    '- For each material news item, classify: IGNORE, WATCH, HOLD, or REALLOCATE_CANDIDATE.',
+    '- Translate every item into this sentence: This matters only if it changes [debt / cash flow / margins / moat / accounting / governance / valuation burden].',
+    '- Price movement alone is IGNORE unless it makes valuation clearly too demanding for the fundamentals.'
+  ].join('\n')
+};
+const DEFAULT_LEDGER = {app_version:APP_VERSION,run_id:'prymis_fund_steward_run_'+Math.random().toString(16).slice(2),created_at:new Date().toISOString(),starting_cash:10000,points:[]};
+let CONFIG = loadJSON(KEY.config, DEFAULT_CONFIG);
+let LEDGER = loadJSON(KEY.ledger, DEFAULT_LEDGER);
+let currentPrompt = localStorage.getItem(KEY.currentPrompt) || '';
+let autoBackupTimer = null;
+let reminderTimer = null;
+let dirHandleCache = null;
+
+function clone(o){return JSON.parse(JSON.stringify(o));}
+function loadJSON(key, def){try{const s=localStorage.getItem(key);return s?JSON.parse(s):clone(def);}catch(e){return clone(def);}}
+
+/* ---------- quota-safe storage layer ---------- */
+function trySetItem(key,str){try{localStorage.setItem(key,str);return true;}catch(e){return false;}}
+function saveJSON(key,obj){return trySetItem(key,JSON.stringify(obj));} // never throws
+function rawFingerprint(raw){const s=String(raw||'');return s.length+'|'+s.slice(0,80);}
+// Append-only rule: never delete old ledger points to fit browser storage.
+function saveLedgerSafe(){
+  if(trySetItem(KEY.ledger,JSON.stringify(LEDGER)))return true;
+  toast('Browser storage is full — ledger was NOT trimmed. Use Auto-save Folder or Download Full State before closing.',false);
+  updateStorageMeter();
+  queueAutoBackup('browser-storage-full');
+  return false;
+}
+function estimateStorageBytes(){let total=0;try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);const v=localStorage.getItem(k)||'';total+=k.length+v.length;}}catch(e){}return total*2;/* UTF-16 ~2 bytes/char */}
+function updateStorageMeter(){
+  const el=document.getElementById('storage-text'); if(!el)return;
+  const used=estimateStorageBytes(); const cap=5*1024*1024; // assume ~5MB browser cap
+  const pctUsed=Math.min(100,Math.round(used/cap*100));
+  const kb=(used/1024).toFixed(0);
+  el.textContent=`Approx ${kb} KB used across ${ (LEDGER.points||[]).length } ledger point(s). Rough cap ~5 MB (much smaller on file:// origins).`;
+  const bar=document.getElementById('storage-bar'); if(bar)bar.style.width=pctUsed+'%';
+  const hint=document.getElementById('storage-hint');
+  if(hint){
+    if(location.protocol==='file:') hint.textContent='You are on a file:// origin, which often has a tiny storage quota. Use Auto-save Folder and/or run via a local server (e.g. "python -m http.server").';
+    else if(pctUsed>75) hint.textContent='Storage is getting full. Auto-save to a backup folder or Download Full State. This version will not auto-delete old points.';
+    else hint.textContent='';
+  }
+}
+/* --------------------------------------------- */
+
+
+/* ---------- adjacent-folder auto-save layer ---------- */
+const HANDLE_DB = 'prymis_fund_v2_file_handles';
+const HANDLE_STORE = 'kv';
+const AUTO_DIR_KEY = 'auto_backup_directory_handle';
+function idbOpen(){return new Promise((resolve,reject)=>{const req=indexedDB.open(HANDLE_DB,1);req.onupgradeneeded=()=>req.result.createObjectStore(HANDLE_STORE);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
+async function idbGet(key){const db=await idbOpen();return new Promise((resolve,reject)=>{const tx=db.transaction(HANDLE_STORE,'readonly');const req=tx.objectStore(HANDLE_STORE).get(key);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
+async function idbSet(key,value){const db=await idbOpen();return new Promise((resolve,reject)=>{const tx=db.transaction(HANDLE_STORE,'readwrite');tx.objectStore(HANDLE_STORE).put(value,key);tx.oncomplete=()=>resolve(true);tx.onerror=()=>reject(tx.error);});}
+async function idbDel(key){const db=await idbOpen();return new Promise((resolve,reject)=>{const tx=db.transaction(HANDLE_STORE,'readwrite');tx.objectStore(HANDLE_STORE).delete(key);tx.oncomplete=()=>resolve(true);tx.onerror=()=>reject(tx.error);});}
+function safeFilePart(s){return String(s||'auto').replace(/[^a-z0-9._-]+/gi,'_').slice(0,80);}
+function fileStamp(d=new Date()){return d.toISOString().replace(/[:.]/g,'-');}
+async function verifyDirPermission(handle){
+  if(!handle)return false;
+  const opts={mode:'readwrite'};
+  if(handle.queryPermission && await handle.queryPermission(opts)==='granted')return true;
+  if(handle.requestPermission && await handle.requestPermission(opts)==='granted')return true;
+  return false;
+}
+async function getAutoBackupDirHandle(promptForPermission=false){
+  if(dirHandleCache && await verifyDirPermission(dirHandleCache))return dirHandleCache;
+  const h=await idbGet(AUTO_DIR_KEY).catch(()=>null);
+  if(!h)return null;
+  if(promptForPermission){
+    if(await verifyDirPermission(h)){dirHandleCache=h;return h;}
+  }else if(h.queryPermission && await h.queryPermission({mode:'readwrite'})==='granted'){
+    dirHandleCache=h;return h;
+  }
+  return null;
+}
+async function writeTextFile(dirHandle,name,text){
+  const fileHandle=await dirHandle.getFileHandle(name,{create:true});
+  const writable=await fileHandle.createWritable();
+  await writable.write(text);
+  await writable.close();
+}
+async function readTextFile(dirHandle,name){
+  const fileHandle=await dirHandle.getFileHandle(name,{create:false});
+  const file=await fileHandle.getFile();
+  return await file.text();
+}
+function clonePointForDailyLedger(point){
+  const p=clone(point||{});
+  p.daily_ledger_recorded_at=new Date().toISOString();
+  return p;
+}
+async function loadDailyLedgerFromFolder(dir){
+  try{
+    const txt=await readTextFile(dir,'prymis_quality_steward_v3_daily_ledger.json');
+    const obj=JSON.parse(txt);
+    if(obj && Array.isArray(obj.points))return obj;
+  }catch(e){}
+  return {
+    app_version:APP_VERSION,
+    ledger_type:'daily_canonical_one_point_per_calendar_day',
+    daily_policy:'append a new point only when the latest run date is a new calendar day; same-day saves refresh that day\'s checkpoint; archive saves every snapshot',
+    run_id:LEDGER.run_id||('prymis_fund_steward_run_'+Math.random().toString(16).slice(2)),
+    created_at:LEDGER.created_at||new Date().toISOString(),
+    starting_cash:safeNum(LEDGER.starting_cash||CONFIG.starting_cash,10000),
+    points:[]
+  };
+}
+async function writeDailyLedgerSnapshot(dir,state,reason='auto'){
+  const latestPoint=(LEDGER.points||[]).slice(-1)[0];
+  const daily=await loadDailyLedgerFromFolder(dir);
+  daily.app_version=APP_VERSION;
+  daily.ledger_type='daily_canonical_one_point_per_calendar_day';
+  daily.daily_policy='append a new point only when the latest run date is a new calendar day; same-day saves refresh that day\'s checkpoint; archive saves every snapshot';
+  daily.run_id=daily.run_id||LEDGER.run_id;
+  daily.created_at=daily.created_at||LEDGER.created_at||new Date().toISOString();
+  daily.starting_cash=safeNum(LEDGER.starting_cash||CONFIG.starting_cash,10000);
+  daily.source_full_ledger_points=(LEDGER.points||[]).length;
+  daily.updated_at=new Date().toISOString();
+  daily.last_save_reason=reason;
+  if(latestPoint){
+    const d=pointDateKey(latestPoint);
+    const snapshot=clonePointForDailyLedger(latestPoint);
+    snapshot.daily_ledger_date=d;
+    const idx=(daily.points||[]).findIndex(p=>pointDateKey(p)===d || p.daily_ledger_date===d);
+    if(idx>=0){
+      daily.points[idx]=snapshot;
+      daily.last_daily_action='refreshed_existing_day';
+    }else{
+      daily.points.push(snapshot);
+      daily.last_daily_action='appended_new_day';
+    }
+  }
+  daily.points=(daily.points||[]).sort((a,b)=>String(a.timestamp||a.daily_ledger_date||'').localeCompare(String(b.timestamp||b.daily_ledger_date||'')));
+  daily.daily_points_count=daily.points.length;
+  const compact=JSON.stringify(daily,null,2);
+  await writeTextFile(dir,'prymis_quality_steward_v3_daily_ledger.json',compact);
+  return daily;
+}
+async function chooseAutoBackupFolder(){
+  if(!window.showDirectoryPicker){toast('This browser does not support folder auto-save. Use Download Full State instead.',false);updateAutoSaveStatus();return;}
+  try{
+    const handle=await window.showDirectoryPicker({mode:'readwrite'});
+    if(!await verifyDirPermission(handle)){toast('Folder permission was not granted.',false);return;}
+    dirHandleCache=handle;
+    await idbSet(AUTO_DIR_KEY,handle);
+    await writeTextFile(handle,'README_Prymis_Backups.txt','This folder is used by Prymis to auto-save backups. Files:\n- prymis_quality_steward_v3_latest.json overwrites with the latest full state.\n- prymis_quality_steward_v3_daily_ledger.json is the canonical daily ledger: it appends only on a new calendar day and refreshes the same-day checkpoint.\n- archive/ saves every timestamped full-state snapshot.\n');
+    await autoSaveFullState('folder-connected',true);
+    updateAutoSaveStatus();
+    toast('Backup folder connected');
+  }catch(e){console.error(e);toast('Folder selection cancelled or failed.',false);}
+}
+async function forgetAutoBackupFolder(){dirHandleCache=null;await idbDel(AUTO_DIR_KEY).catch(()=>{});updateAutoSaveStatus();toast('Backup folder forgotten');}
+async function autoSaveFullState(reason='auto',showToast=false){
+  const dir=await getAutoBackupDirHandle(true);
+  if(!dir){if(showToast)toast('No backup folder connected.',false);return false;}
+  try{
+    CONFIG=getConfigFromUI();
+    const state=fullState();
+    state.auto_save={
+      reason,
+      saved_at:new Date().toISOString(),
+      app_version:APP_VERSION,
+      folder_policy:'latest overwrites; daily_ledger appends only on a new calendar day and refreshes same-day checkpoint; archive saves every snapshot'
+    };
+    const json=JSON.stringify(state,null,2);
+    await writeTextFile(dir,'prymis_quality_steward_v3_latest.json',json);
+    const daily=await writeDailyLedgerSnapshot(dir,state,reason);
+    const archive=await dir.getDirectoryHandle('archive',{create:true});
+    await writeTextFile(archive,`prymis_state_${fileStamp()}_${safeFilePart(reason)}.json`,json);
+    const last=(LEDGER.points||[]).slice(-1)[0];
+    const status=document.getElementById('autosave-status');
+    if(status)status.textContent=`Connected. Last auto-save: ${new Date().toLocaleString()}${last?` · latest NAV ${money(last.nav)}`:''} · daily ledger: ${daily.last_daily_action||'unchanged'} (${daily.daily_points_count||0} day${(daily.daily_points_count||0)===1?'':'s'}) · archive saved`;
+    if(showToast)toast(`Full state saved; daily ledger ${daily.last_daily_action==='appended_new_day'?'appended a new day':'refreshed today'}; archive snapshot saved`);
+    return true;
+  }catch(e){console.error(e);toast('Auto-save failed. Reconnect the backup folder or use Download Full State.',false);updateAutoSaveStatus();return false;}
+}
+function queueAutoBackup(reason='auto'){
+  clearTimeout(autoBackupTimer);
+  autoBackupTimer=setTimeout(()=>autoSaveFullState(reason,false),650);
+}
+async function updateAutoSaveStatus(){
+  const el=document.getElementById('autosave-status'); if(!el)return;
+  if(!window.showDirectoryPicker){el.textContent='Folder auto-save is not supported in this browser. Use Download Full State.';return;}
+  const h=await idbGet(AUTO_DIR_KEY).catch(()=>null);
+  if(!h){el.textContent='No backup folder connected.';return;}
+  let perm='prompt';
+  try{if(h.queryPermission)perm=await h.queryPermission({mode:'readwrite'});}catch(e){}
+  el.textContent=`Backup folder remembered. Permission: ${perm}. Click Auto-save Now to refresh permission if needed. Daily ledger appends only on a new calendar day; archive saves every snapshot.`;
+}
+/* --------------------------------------------------- */
+
+/* ---------- morning discipline reminder layer ---------- */
+const DEFAULT_REMINDER = {enabled:false,time:'08:00',lastFiredDate:''};
+function loadReminderSettings(){try{return Object.assign({},DEFAULT_REMINDER,JSON.parse(localStorage.getItem(KEY.reminder)||'{}'));}catch(e){return Object.assign({},DEFAULT_REMINDER);}}
+function saveReminderSettings(){const r={enabled:document.getElementById('reminder-enabled')?.value==='true',time:document.getElementById('reminder-time')?.value||'08:00',lastFiredDate:loadReminderSettings().lastFiredDate||''};trySetItem(KEY.reminder,JSON.stringify(r));updateReminderStatus();return r;}
+function setReminderToUI(){const r=loadReminderSettings();const en=document.getElementById('reminder-enabled'), tm=document.getElementById('reminder-time');if(en)en.value=String(!!r.enabled);if(tm)tm.value=r.time||'08:00';updateReminderStatus();}
+function localDateKey(d=new Date()){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`;}
+function updateReminderStatus(){const el=document.getElementById('reminder-status');if(!el)return;const r=loadReminderSettings();const perm=('Notification' in window)?Notification.permission:'unsupported';el.textContent=r.enabled?`On at ${r.time}. Browser notification permission: ${perm}.`:`Reminder is off. Browser notification permission: ${perm}.`;}
+async function requestNotifications(){if(!('Notification' in window)){toast('Notifications are not supported in this browser.',false);updateReminderStatus();return;}const p=await Notification.requestPermission();updateReminderStatus();toast(p==='granted'?'Notifications enabled':'Notifications not enabled',p==='granted');}
+function showDisciplineReminder(test=false){
+  const title='Prymis discipline check';
+  const body='Open the fundamentals steward. Refresh the accounting prices, review fundamentals only, record the JSON, and back up the state.';
+  if(('Notification' in window) && Notification.permission==='granted')new Notification(title,{body,tag:'prymis-discipline',renotify:true});
+  toast(test?'Test reminder fired':'Discipline reminder: run the fundamentals steward',true);
+}
+function maybeFireReminder(){const r=loadReminderSettings();if(!r.enabled)return;const now=new Date();const today=localDateKey(now);if(r.lastFiredDate===today)return;const [hh,mm]=String(r.time||'08:00').split(':').map(x=>parseInt(x,10));const target=new Date(now);target.setHours(Number.isFinite(hh)?hh:8,Number.isFinite(mm)?mm:0,0,0);if(now>=target){r.lastFiredDate=today;trySetItem(KEY.reminder,JSON.stringify(r));showDisciplineReminder(false);queueAutoBackup('reminder-fired');}}
+function startReminderLoop(){clearInterval(reminderTimer);reminderTimer=setInterval(maybeFireReminder,60000);maybeFireReminder();updateReminderStatus();}
+function downloadReminderICS(){
+  const r=saveReminderSettings();
+  const [hh,mm]=String(r.time||'08:00').split(':').map(x=>parseInt(x,10));
+  const start=new Date(); start.setDate(start.getDate()+1); start.setHours(Number.isFinite(hh)?hh:8,Number.isFinite(mm)?mm:0,0,0);
+  const dt=`${start.getFullYear()}${String(start.getMonth()+1).padStart(2,'0')}${String(start.getDate()).padStart(2,'0')}T${String(start.getHours()).padStart(2,'0')}${String(start.getMinutes()).padStart(2,'0')}00`;
+  const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z$/,'Z');
+  const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Prymis//Fundamentals Steward//EN','BEGIN:VEVENT','UID:prymis-discipline-review@local','DTSTAMP:'+stamp,'DTSTART:'+dt,'RRULE:FREQ=DAILY','SUMMARY:Prymis disciplined investing review','DESCRIPTION:Open Prymis. Run the fundamentals-only review. Record the result. Export or auto-save the state.','END:VEVENT','END:VCALENDAR'].join('\r\n');
+  const blob=new Blob([ics],{type:'text/calendar'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='prymis_quality_daily_discipline_reminder.ics';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Calendar reminder downloaded');
+}
+/* ---------------------------------------------------- */
+
+function toast(msg,ok=true){const t=document.getElementById('toast');t.style.background=ok?'var(--good)':'var(--bad)';t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+function safeNum(x,def=0){const n=Number(x);return Number.isFinite(n)?n:def;}
+function money(x){return Number.isFinite(x)?'$'+x.toLocaleString(undefined,{maximumFractionDigits:2}):'$—';}
+function pct(x){if(!Number.isFinite(x))return '—';return (x>0?'+':'')+(x*100).toFixed(2)+'%';}
+function normalizeTicker(t){return String(t||'').trim().toUpperCase().replace(/\s+/g,'');}
+function validTicker(t){return /^[A-Z][A-Z0-9.\-]{0,12}$/.test(t);}
+function parseMaybeJSON(raw){const s=raw.trim();if(!s)return null;try{return JSON.parse(s);}catch(e){}let m=s.match(/```json\s*([\s\S]*?)\s*```/i);if(m){try{return JSON.parse(m[1]);}catch(e){return null;}}m=s.match(/```\s*([\s\S]*?)\s*```/i);if(m){try{return JSON.parse(m[1]);}catch(e){return null;}}const start=s.indexOf('{'), end=s.lastIndexOf('}');if(start>=0&&end>start){try{return JSON.parse(s.slice(start,end+1));}catch(e){return null;}}return null;}
+function sum(obj){return Object.values(obj||{}).reduce((a,b)=>a+safeNum(b,0),0);}
+function computeNAV(positions,prices,cash){let total=safeNum(cash,0);Object.keys(positions||{}).forEach(t=>{total += safeNum(positions[t],0)*safeNum(prices[t],0);});return total;}
+function weightsFromPoint(p){const nav=safeNum(p.nav,0);const w={};if(nav<=0)return w;Object.keys(p.positions||{}).forEach(t=>{const mv=safeNum(p.positions[t],0)*safeNum(p.prices?.[t],0);if(mv>0)w[t]=mv/nav;});w.CASH=safeNum(p.cash,0)/nav;return w;}
+function turnover(prev,curr){if(!prev||!curr)return 0;const a=weightsFromPoint(prev), b=weightsFromPoint(curr);const keys=new Set([...Object.keys(a),...Object.keys(b)]);let s=0;keys.forEach(k=>s+=Math.abs((a[k]||0)-(b[k]||0)));return s/2;}
+function largestAsset(point){const nav=safeNum(point?.nav,0);if(!point||nav<=0)return {ticker:'—',weight:0};let best={ticker:'CASH',weight:safeNum(point.cash,0)/nav};Object.keys(point.positions||{}).forEach(t=>{const w=(safeNum(point.positions[t],0)*safeNum(point.prices?.[t],0))/nav;if(w>best.weight)best={ticker:t,weight:w};});return best;}
+
+/* ---------- S&P 500 benchmark scoreboard layer ---------- */
+const FRED_SP500_URL='https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500';
+let fredSeriesCache=null;
+function startCash(){return safeNum(LEDGER.starting_cash,safeNum(CONFIG.starting_cash,10000));}
+function dateKeyFromAny(x){if(!x)return localDateKey(new Date());const str=String(x);if(/^\d{4}-\d{2}-\d{2}/.test(str))return str.slice(0,10);const d=new Date(str);if(Number.isNaN(d.getTime()))return localDateKey(new Date());return localDateKey(d);}
+function pointDateKey(p){return dateKeyFromAny(p?.timestamp||new Date());}
+function benchmarkSymbol(){return (CONFIG.benchmark_symbol||'SP500').toUpperCase();}
+function benchmarkOn(){return CONFIG.benchmark_enabled!==false;}
+function readBenchmarkConfigFromUI(){const en=document.getElementById('benchmark-enabled');const sym=document.getElementById('benchmark-symbol');const af=document.getElementById('benchmark-auto-fetch');const note=document.getElementById('benchmark-source-note');CONFIG.benchmark_enabled=en?en.value==='true':CONFIG.benchmark_enabled!==false;CONFIG.benchmark_symbol=sym?sym.value:'SP500';CONFIG.benchmark_auto_fetch=af?af.value==='true':CONFIG.benchmark_auto_fetch!==false;CONFIG.benchmark_source_note=note?note.value.trim()||'AI JSON benchmark_accounting':'AI JSON benchmark_accounting';saveJSON(KEY.config,CONFIG);}
+function setBenchmarkConfigToUI(){const en=document.getElementById('benchmark-enabled'),sym=document.getElementById('benchmark-symbol'),af=document.getElementById('benchmark-auto-fetch'),note=document.getElementById('benchmark-source-note');if(en)en.value=String(CONFIG.benchmark_enabled!==false);if(sym)sym.value=CONFIG.benchmark_symbol||'SP500';if(af)af.value=String(CONFIG.benchmark_auto_fetch!==false);if(note)note.value=CONFIG.benchmark_source_note||'AI JSON benchmark_accounting';}
+function parseFredCSV(text){return String(text||'').trim().split(/\r?\n/).slice(1).map(line=>{const parts=line.split(',');const date=(parts[0]||'').trim();const value=safeNum(parts[1],NaN);return {date,value};}).filter(r=>/^\d{4}-\d{2}-\d{2}$/.test(r.date)&&Number.isFinite(r.value)&&r.value>0);}
+async function fetchFredSeries(){if(fredSeriesCache&&fredSeriesCache.length)return fredSeriesCache;const res=await fetch(FRED_SP500_URL,{cache:'no-store'});if(!res.ok)throw new Error('FRED request failed: '+res.status);fredSeriesCache=parseFredCSV(await res.text());if(!fredSeriesCache.length)throw new Error('No FRED SP500 data parsed');return fredSeriesCache;}
+function fredOnOrBefore(series,dateKey){let best=null;for(const row of series){if(row.date<=dateKey)best=row;else break;}return best;}
+function attachBenchmarkToPoint(point,level,date,source){if(!point)return false;const lvl=safeNum(level,NaN);if(!Number.isFinite(lvl)||lvl<=0)return false;point.benchmark=Object.assign({},point.benchmark||{},{symbol:benchmarkSymbol(),level:Number(lvl),date:date||pointDateKey(point),source:source||CONFIG.benchmark_source_note||'manual',recorded_at:new Date().toISOString()});recomputeBenchmarks();return true;}
+function clearLatestBenchmark(){const p=(LEDGER.points||[]).slice(-1)[0];if(!p){toast('No ledger point yet.',false);return;}delete p.benchmark;recomputeBenchmarks();saveLedgerSafe();refreshAll();queueAutoBackup('benchmark-cleared');toast('Latest benchmark cleared');}
+function recomputeBenchmarks(){const pts=LEDGER.points||[];const symbol=benchmarkSymbol();const cash0=startCash();const first=pts.find(p=>p.benchmark&&safeNum(p.benchmark.level,NaN)>0&&(!p.benchmark.symbol||String(p.benchmark.symbol).toUpperCase()===symbol));if(!first){LEDGER.benchmark=Object.assign({},LEDGER.benchmark||{},{symbol});return;}const baseLevel=safeNum(LEDGER.benchmark?.base_level,safeNum(first.benchmark.base_level,safeNum(first.benchmark.level,NaN)));const baseDate=LEDGER.benchmark?.base_date||first.benchmark.base_date||first.benchmark.date||pointDateKey(first);const units=cash0/baseLevel;LEDGER.benchmark={symbol,base_level:baseLevel,base_date:baseDate,units,starting_cash:cash0,updated_at:new Date().toISOString()};pts.forEach(p=>{if(!p.benchmark)return;const level=safeNum(p.benchmark.level,NaN);if(!Number.isFinite(level)||level<=0)return;const value=units*level;const basketReturn=safeNum(p.nav,0)/cash0-1;const benchReturn=value/cash0-1;p.benchmark=Object.assign({},p.benchmark,{symbol,base_level:baseLevel,base_date:baseDate,units,value,return_pct:benchReturn,basket_return_pct:basketReturn,excess_return_pct:basketReturn-benchReturn,excess_dollars:safeNum(p.nav,0)-value});});}
+function latestBenchmark(){const p=(LEDGER.points||[]).slice(-1)[0];return p&&p.benchmark?p.benchmark:null;}
+function updateBenchmarkInputsFromLatest(){const pts=LEDGER.points||[];const last=pts[pts.length-1];const d=document.getElementById('benchmark-date'),l=document.getElementById('benchmark-level');if(last&&d&&!d.value)d.value=pointDateKey(last);if(last&&last.benchmark&&l&&!l.value)l.value=safeNum(last.benchmark.level,0)||'';}
+function updateBenchmarkStatus(){const el=document.getElementById('benchmark-status');if(!el)return;const pts=LEDGER.points||[];const rows=pts.filter(p=>p.benchmark&&safeNum(p.benchmark.level,NaN)>0);const b=latestBenchmark();if(!benchmarkOn()){el.textContent='Benchmark tracking is off.';return;}if(!rows.length){el.textContent='Benchmark is on. Future pasted AI JSON must include benchmark_accounting.sp500_price_index_level; no manual/backfill workflow is required.';return;}if(b&&Number.isFinite(safeNum(b.value,NaN))){el.textContent=`${benchmarkSymbol()} benchmark active from pasted JSON. ${rows.length}/${pts.length} point(s) have levels. Latest: ${b.date||'—'} level ${safeNum(b.level,0).toFixed(2)}, value ${money(b.value)}, excess ${pct(b.excess_return_pct)} (${money(b.excess_dollars)}).`;}else{el.textContent=`${benchmarkSymbol()} benchmark active from pasted JSON. ${rows.length}/${pts.length} point(s) have levels. Latest point has no benchmark level yet.`;}}
+function recordManualBenchmark(){readBenchmarkConfigFromUI();const p=(LEDGER.points||[]).slice(-1)[0];if(!p){toast('Record a ledger point first.',false);return;}const level=safeNum(document.getElementById('benchmark-level')?.value,NaN);const date=document.getElementById('benchmark-date')?.value||pointDateKey(p);const source=document.getElementById('benchmark-source-note')?.value||'manual';if(!attachBenchmarkToPoint(p,level,date,source)){toast('Enter a valid S&P level first.',false);return;}saveLedgerSafe();refreshAll();queueAutoBackup('benchmark-manual');toast('Benchmark level recorded');}
+async function fetchBenchmarkForLatest(showToast=true){readBenchmarkConfigFromUI();if(!benchmarkOn()){if(showToast)toast('Benchmark tracking is off.',false);return false;}const p=(LEDGER.points||[]).slice(-1)[0];if(!p){if(showToast)toast('Record a ledger point first.',false);return false;}try{const series=await fetchFredSeries();const row=fredOnOrBefore(series,pointDateKey(p));if(!row)throw new Error('No S&P level found on or before '+pointDateKey(p));document.getElementById('benchmark-date').value=row.date;document.getElementById('benchmark-level').value=row.value;attachBenchmarkToPoint(p,row.value,row.date,'AI JSON benchmark_accounting');saveLedgerSafe();refreshAll();queueAutoBackup('benchmark-fred-latest');if(showToast)toast(`Fetched ${benchmarkSymbol()} ${row.date}: ${row.value.toFixed(2)}`);return true;}catch(e){console.error(e);if(showToast)toast('Could not fetch FRED S&P data. Paste the close manually.',false);return false;}}
+async function backfillBenchmarkFromFred(){readBenchmarkConfigFromUI();if(!benchmarkOn()){toast('Benchmark tracking is off.',false);return;}const pts=LEDGER.points||[];if(!pts.length){toast('No ledger points to backfill.',false);return;}try{const series=await fetchFredSeries();let count=0;pts.forEach(p=>{const row=fredOnOrBefore(series,pointDateKey(p));if(row){attachBenchmarkToPoint(p,row.value,row.date,'AI JSON benchmark_accounting');count++;}});recomputeBenchmarks();saveLedgerSafe();refreshAll();queueAutoBackup('benchmark-fred-backfill');toast(`Backfilled ${count} benchmark point(s)`);}catch(e){console.error(e);toast('Could not backfill from FRED. Use manual benchmark entry.',false);}}
+function maybeAutoFetchBenchmarkAfterRecord(){recomputeBenchmarks();saveLedgerSafe();refreshAll();queueAutoBackup('benchmark-from-ai-json');}
+/* ------------------------------------------------------ */
+
+function avgQuality(p){const rows = p?.fundamentals_scorecard || p?.selected_holdings || [];
+  const nums = [];
+  if(Array.isArray(rows)) rows.forEach(r=>{
+    const v = safeNum(r.fundamental_quality_score_0_100 ?? r.quality_score ?? r.score, NaN);
+    if(Number.isFinite(v)) nums.push(v);
+  });
+  return nums.length ? nums.reduce((a,b)=>a+b,0)/nums.length : NaN;
+}
+function escapeHTML(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function getConfigFromUI(){return {
+  starting_cash:safeNum(document.getElementById('starting-cash').value,10000),
+  basket_size:Math.max(1,Math.min(10,Math.round(safeNum(document.getElementById('basket-size').value,10)))),
+  initial_rule:document.getElementById('initial-rule').value || 'equal_10',
+  require_weights:document.getElementById('require-weights').value==='true',
+  benchmark_enabled:document.getElementById('benchmark-enabled')?document.getElementById('benchmark-enabled').value==='true':CONFIG.benchmark_enabled!==false,
+  benchmark_symbol:document.getElementById('benchmark-symbol')?document.getElementById('benchmark-symbol').value:'SP500',
+  benchmark_auto_fetch:document.getElementById('benchmark-auto-fetch')?document.getElementById('benchmark-auto-fetch').value==='true':CONFIG.benchmark_auto_fetch!==false,
+  benchmark_source_note:document.getElementById('benchmark-source-note')?document.getElementById('benchmark-source-note').value.trim()||'AI JSON benchmark_accounting':'AI JSON benchmark_accounting',
+  benchmark_require_in_json:true,
+  eligible_universe:document.getElementById('eligible-universe').value.trim()||DEFAULT_CONFIG.eligible_universe,
+  base_prompt:document.getElementById('base-prompt').value.trim()||DEFAULT_CONFIG.base_prompt
+};}
+function setConfigToUI(cfg){document.getElementById('starting-cash').value=cfg.starting_cash??10000;document.getElementById('basket-size').value=cfg.basket_size??10;document.getElementById('initial-rule').value=cfg.initial_rule||'equal_10';document.getElementById('require-weights').value=String(cfg.require_weights!==false);document.getElementById('eligible-universe').value=cfg.eligible_universe||DEFAULT_CONFIG.eligible_universe;document.getElementById('base-prompt').value=cfg.base_prompt||DEFAULT_CONFIG.base_prompt;document.getElementById('header-capital').textContent=money(cfg.starting_cash||10000);setBenchmarkConfigToUI();}
+function getNewsInput(){const el=document.getElementById('market-news');return el?el.value.trim():'';}
+function setNewsInput(s){const el=document.getElementById('market-news');if(el)el.value=s||'';}
+
+function buildLedger(){const el=document.getElementById('ledger-table'),pts=LEDGER.points||[];if(!pts.length){el.innerHTML='<div style="color:var(--dim);font-style:italic">No ledger points yet.</div>';return;}const rows=pts.slice().reverse().map(p=>{const b=p.benchmark||{};const hasB=Number.isFinite(safeNum(b.value,NaN));return `<tr><td class="mono">${p.timestamp||'—'}</td><td><span class="tag ${p.decision==='HOLD'?'good':p.decision==='REALLOCATE'?'warn':'purple'}">${escapeHTML(p.decision||'—')}</span></td><td>${money(p.nav)}</td><td>${hasB?money(b.value):'—'}</td><td>${hasB?pct(b.return_pct):'—'}</td><td>${hasB?pct(b.excess_return_pct):'—'}</td><td>${Number.isFinite(avgQuality(p))?avgQuality(p).toFixed(1):'—'}</td><td>${pct(p.cash_pct||0)}</td><td>${Object.keys(p.positions||{}).length}</td><td style="color:var(--dim)">${escapeHTML((p.thesis||'').slice(0,95))}${(p.thesis||'').length>95?'…':''}</td></tr>`;}).join('');el.innerHTML=`<table class="table"><thead><tr><th>Timestamp</th><th>Decision</th><th>NAV</th><th>S&amp;P Value</th><th>S&amp;P Return</th><th>Excess Return</th><th>Quality</th><th>Cash</th><th>Stocks</th><th>Fundamentals Thesis</th></tr></thead><tbody>${rows}</tbody></table>`;}
+function buildPortfolio(){const el=document.getElementById('portfolio-table'), pts=LEDGER.points||[];if(!pts.length){el.innerHTML='<div style="color:var(--dim);font-style:italic">No basket yet.</div>';return;}const p=pts[pts.length-1], nav=safeNum(p.nav,0);const rows=Object.keys(p.positions||{}).sort().map(t=>{const sh=safeNum(p.positions[t],0), px=safeNum(p.prices?.[t],0), mv=sh*px, w=nav>0?mv/nav:0;const score=scoreForTicker(p,t);return `<tr><td class="mono">${t}</td><td class="mono right">${sh.toLocaleString(undefined,{maximumFractionDigits:6})}</td><td class="mono right">${px.toFixed(2)}</td><td class="right">${money(mv)}</td><td><span class="tag blue">${pct(w)}</span></td><td>${Number.isFinite(score)?score.toFixed(0):'—'}</td><td style="color:var(--dim)">${escapeHTML(holdingReason(p,t))}</td></tr>`;}).join('');el.innerHTML=`<table class="table"><thead><tr><th>Ticker</th><th class="right">Shares</th><th class="right">Accounting Price</th><th class="right">Book Value</th><th>Weight</th><th>Score</th><th>Fundamental Reason</th></tr></thead><tbody>${rows||'<tr><td colspan="7" style="color:var(--dim)">No positions</td></tr>'}<tr><td colspan="3" class="right" style="color:var(--dim)">CASH, asset #11</td><td class="right">${money(p.cash)}</td><td><span class="tag purple">${pct(p.cash_pct||0)}</span></td><td></td><td></td></tr><tr><td colspan="3" class="right" style="color:var(--amber);font-weight:800">Total NAV</td><td class="right" style="font-weight:800">${money(p.nav)}</td><td></td><td></td><td></td></tr></tbody></table>`;}
+function holdingReason(p,t){const arr=p.selected_holdings||[];const found=Array.isArray(arr)?arr.find(x=>normalizeTicker(x.ticker)===t):null;return found?(found.fundamental_reason||found.reason||found.thesis||'').slice(0,100):'';}
+function scoreForTicker(p,t){const rows=[...(Array.isArray(p.fundamentals_scorecard)?p.fundamentals_scorecard:[]), ...(Array.isArray(p.selected_holdings)?p.selected_holdings:[])];const found=rows.find(x=>normalizeTicker(x.ticker)===t);return found?safeNum(found.fundamental_quality_score_0_100 ?? found.quality_score ?? found.score, NaN):NaN;}
+function updateKPIs(){const pts=LEDGER.points||[];const ids=['kpi-time','kpi-nav','kpi-quality','kpi-cash','kpi-holdings','kpi-largest','kpi-decision','kpi-turnover','kpi-benchmark-value','kpi-benchmark-return','kpi-excess-return','kpi-excess-dollars'];if(!pts.length){ids.forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=id==='kpi-nav'?'$—':'—';});document.getElementById('kpi-tags').innerHTML='';document.getElementById('latest-thought').value='';updateBenchmarkStatus();return;}recomputeBenchmarks();const last=pts[pts.length-1],prev=pts.length>1?pts[pts.length-2]:null;const big=largestAsset(last),aq=avgQuality(last),b=last.benchmark||{};document.getElementById('kpi-time').textContent=last.timestamp||'—';document.getElementById('kpi-nav').textContent=money(last.nav);document.getElementById('kpi-quality').textContent=Number.isFinite(aq)?aq.toFixed(1)+'/100':'—';document.getElementById('kpi-cash').textContent=pct(last.cash_pct||0);document.getElementById('kpi-holdings').textContent=String(Object.keys(last.positions||{}).length)+' / '+(CONFIG.basket_size||10);document.getElementById('kpi-largest').textContent=big.ticker+' '+pct(big.weight);document.getElementById('kpi-decision').textContent=last.decision||'—';document.getElementById('kpi-turnover').textContent=prev?pct(last.turnover||0):'—';document.getElementById('kpi-benchmark-value').textContent=Number.isFinite(safeNum(b.value,NaN))?money(b.value):'—';document.getElementById('kpi-benchmark-return').textContent=Number.isFinite(safeNum(b.return_pct,NaN))?pct(b.return_pct):'—';document.getElementById('kpi-excess-return').textContent=Number.isFinite(safeNum(b.excess_return_pct,NaN))?pct(b.excess_return_pct):'—';document.getElementById('kpi-excess-dollars').textContent=Number.isFinite(safeNum(b.excess_dollars,NaN))?money(b.excess_dollars):'—';document.getElementById('kpi-tags').innerHTML=`<span class="tag ${last.decision==='HOLD'?'good':last.decision==='REALLOCATE'?'warn':'purple'}">${escapeHTML(last.decision||'Initial')}</span><span class="tag blue">Cash ${pct(last.cash_pct||0)}</span><span class="tag purple">Quality ${Number.isFinite(aq)?aq.toFixed(1):'—'}</span><span class="tag">Research: fundamentals only</span>${Number.isFinite(safeNum(b.excess_return_pct,NaN))?`<span class="tag ${b.excess_return_pct>=0?'good':'bad'}">Excess ${pct(b.excess_return_pct)}</span>`:''}`;document.getElementById('latest-thought').value=latestThought(last);updateBenchmarkStatus();}
+function latestThought(p){return ['DECISION:',p.decision||'', '', 'BENCHMARK SCOREBOARD:',JSON.stringify(p.benchmark||{},null,2), '', 'FUNDAMENTALS THESIS:',p.thesis||'', '', 'WHY HOLD OR REALLOCATE:',p.decision_reason||'', '', 'FUNDAMENTAL CHANGE AUDIT:',JSON.stringify(p.fundamental_change_audit||{},null,2), '', 'NEWS TRIAGE:',JSON.stringify(p.news_triage||[],null,2), '', 'VALUATION RISK CONTROL:',JSON.stringify(p.valuation_risk_control||{},null,2), '', 'SCORECARD:',JSON.stringify(p.fundamentals_scorecard||[],null,2), '', 'SELECTED HOLDINGS:',JSON.stringify(p.selected_holdings||[],null,2), '', 'CASH RATIONALE:',p.cash_rationale||'', '', 'RISKS / SELL OR REDUCE TRIGGERS:',JSON.stringify(p.risk_controls||{},null,2), '', 'EVIDENCE NOTES:',p.evidence_notes||''].join('\n').trim();}
+function drawChart(){const c=document.getElementById('chart'),ctx=c.getContext('2d'),W=c.width,H=c.height;ctx.clearRect(0,0,W,H);ctx.fillStyle='rgba(0,0,0,.12)';ctx.fillRect(0,0,W,H);const pts=LEDGER.points||[];if(pts.length<2){ctx.fillStyle='rgba(212,165,116,.85)';ctx.font='18px Segoe UI';ctx.fillText('Need at least 2 recorded points to draw NAV vs S&P scoreboard chart.',24,58);return;}recomputeBenchmarks();const basket=pts.map(p=>safeNum(p.nav,CONFIG.starting_cash));const bench=pts.map(p=>safeNum(p.benchmark?.value,NaN));const all=[...basket,...bench.filter(Number.isFinite)];let min=Math.min(...all),max=Math.max(...all);if(max===min){max+=1;min-=1;}const pad=(max-min)*0.08;min-=pad;max+=pad;const L=68,R=24,T=28,B=58,pw=W-L-R,ph=H-T-B;const x=i=>L+(i/(pts.length-1))*pw;const y=v=>T+(1-(v-min)/(max-min))*ph;ctx.strokeStyle='rgba(61,48,40,.85)';ctx.lineWidth=1;for(let g=0;g<=5;g++){const yy=T+g/5*ph;ctx.beginPath();ctx.moveTo(L,yy);ctx.lineTo(L+pw,yy);ctx.stroke();ctx.fillStyle='rgba(155,144,128,.92)';ctx.font='13px Segoe UI';ctx.fillText(money(max-g/5*(max-min)).replace('$',''),8,yy+4);}function drawLine(vals,color,width){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();let started=false;vals.forEach((v,i)=>{if(!Number.isFinite(v)){started=false;return;}if(!started){ctx.moveTo(x(i),y(v));started=true;}else ctx.lineTo(x(i),y(v));});ctx.stroke();}drawLine(basket,'rgba(212,165,116,.96)',4);if(bench.some(Number.isFinite))drawLine(bench,'rgba(96,165,250,.96)',3);ctx.fillStyle='rgba(212,165,116,.96)';ctx.fillRect(L,H-38,16,6);ctx.fillText('Basket NAV',L+22,H-32);ctx.fillStyle='rgba(96,165,250,.96)';ctx.fillRect(L+150,H-38,16,6);ctx.fillText('S&P benchmark value',L+172,H-32);ctx.fillStyle='rgba(155,144,128,.92)';ctx.fillText('Scoreboard only — not a research input',L,18);const n=pts.length,show=Math.min(5,n);for(let k=0;k<show;k++){const i=Math.round((k/(show-1))*(n-1));const ts=String(pts[i].timestamp||'').replace('T',' ').slice(0,16);ctx.fillStyle='rgba(155,144,128,.92)';ctx.fillText(ts,x(i)-42,H-10);}}
+function refreshAll(){recomputeBenchmarks();buildLedger();buildPortfolio();updateKPIs();drawChart();updateStorageMeter();updateBenchmarkStatus();document.getElementById('header-capital').textContent=money(CONFIG.starting_cash||10000);}
+
+function generatePrompt(){
+  CONFIG=getConfigFromUI();
+  saveJSON(KEY.config,CONFIG);
+  const newsNotes=getNewsInput();
+  trySetItem(KEY.news,newsNotes);
+  LEDGER.starting_cash=LEDGER.starting_cash||CONFIG.starting_cash;
+  saveLedgerSafe();
+  const pts=LEDGER.points||[], last=pts[pts.length-1];
+  const last3=pts.slice(-3).map(p=>({
+    timestamp:p.timestamp,
+    decision:p.decision,
+    nav:p.nav,
+    cash_pct:p.cash_pct,
+    holdings_count:Object.keys(p.positions||{}).length,
+    largest_asset:largestAsset(p),
+    avg_quality:Number.isFinite(avgQuality(p))?Number(avgQuality(p).toFixed(2)):null,
+    thesis:(p.thesis||'').slice(0,800),
+    decision_reason:(p.decision_reason||'').slice(0,800),
+    fundamental_change_audit:p.fundamental_change_audit||{},
+    valuation_risk_control:p.valuation_risk_control||{},
+    news_triage:p.news_triage||[],
+    risk_controls:p.risk_controls||{}
+  }));
+  const firstRun=!last;
+  const currentState=firstRun
+    ? `CURRENT PORTFOLIO STATE:\n- Starting cash: $${CONFIG.starting_cash}\n- No basket yet. First run: select exactly ${CONFIG.basket_size} current S&P 500 stocks.\n- Important: the schema contains placeholders only. Do not treat any placeholder as a candidate.`
+    : `CURRENT PORTFOLIO STATE:\n- Timestamp: ${last.timestamp}\n- Cash: ${last.cash}\n- Positions shares: ${JSON.stringify(last.positions||{},null,2)}\n- Accounting prices: ${JSON.stringify(last.prices||{},null,2)}\n- Current NAV: ${last.nav}\n- Current target weights: ${JSON.stringify(last.target_weights||{},null,2)}\n- Last decision: ${last.decision}\n- Last fundamentals thesis: ${(last.thesis||'').slice(0,1200)}\n- Last risk controls: ${JSON.stringify(last.risk_controls||{},null,2)}\n- Last sell/reduce triggers: ${JSON.stringify((last.selected_holdings||[]).map(x=>({ticker:x.ticker,sell_or_reduce_trigger:x.sell_or_reduce_trigger})),null,2)}`;
+  const equalInstruction=CONFIG.initial_rule==='equal_11'
+    ? `Initial deployment rule: target weights should be approximately ${(1/(CONFIG.basket_size+1)).toFixed(6)} for each of the ${CONFIG.basket_size} stocks and ${(1/(CONFIG.basket_size+1)).toFixed(6)} for CASH.`
+    : `Initial deployment rule: target weights should be exactly ${(1/CONFIG.basket_size).toFixed(6)} for each of the ${CONFIG.basket_size} stocks and 0.0 for CASH.`;
+  const schema=exampleSchema();
+  const taskBlock=firstRun
+    ? `1) Research current S&P 500 constituents only.\n2) Select exactly ${CONFIG.basket_size} companies with the strongest fundamentals using the hierarchy in order.\n3) Fetch current (as-of-today) market prices for every selected holding for accounting, then deploy $${CONFIG.starting_cash} according to the initial allocation rule.\n4) Set decision to INITIAL_SELECT.\n5) Output no placeholder tickers.`
+    : `1) Start from the existing basket above. Do not re-select from scratch.\n2) Refresh the CURRENT market price for every holding using live data — do NOT reuse the accounting prices shown above — then recompute NAV and the drifted target_weights from those refreshed prices.\n3) Re-check fundamentals for each current holding: debt, FCF, profitability, moat, accounting/capital allocation, governance/culture, valuation burden.\n4) Triage supplied news and current material events only as possible fundamental-change evidence.\n5) Decide HOLD or REALLOCATE. Prefer HOLD if fundamentals have not materially changed.\n6) If REALLOCATE, explain which fundamental pillar changed, why HOLD is no longer adequate, and why the replacement/cash is superior.`;
+  const priceRule=[
+    'PRICE ACCOUNTING RULE (MANDATORY EVERY RUN):',
+    '- Refresh the accounting price for every non-cash holding to the most recent available quote as of the research date, using live/current market data. This applies on every run, including HOLD.',
+    '- Do NOT reuse, copy, or carry over the prior run\'s accounting prices shown in CURRENT PORTFOLIO STATE. Stale prices are not acceptable.',
+    '- After refreshing prices, recompute NAV = sum(shares * current price) + cash, and recompute target_weights from the refreshed prices so they reflect current drift.',
+    '- If a live quote cannot be obtained for a holding, say so explicitly in evidence_notes and use the most recent known close, clearly labeled as approximate.',
+    '- Refreshing prices is accounting/valuation-sanity only and is NOT a performance signal; price moves alone must never drive a HOLD or REALLOCATE decision.'
+  ].join('\n');
+  const benchmarkRule=[
+    'BENCHMARK ACCOUNTING RULE (MANDATORY, BUT AFTER THE FUNDAMENTAL DECISION):',
+    '- After you have made the fundamentals-only decision, fetch the current/latest available S&P 500 price index close for scoreboard accounting only.',
+    '- Put it only in benchmark_accounting. Do not let it influence selected_holdings, target_weights, HOLD/REALLOCATE, thesis, or sell/reduce triggers.',
+    '- Use benchmark_accounting.sp500_price_index_level for the index level and benchmark_accounting.sp500_price_index_date for the close date used.',
+    '- Include benchmark_policy_check confirming benchmark movement and relative performance were not used in the investment decision.',
+    '- If the index close is unavailable, set benchmark_accounting.unavailable_reason and do not invent a level.'
+  ].join('\n');
+  const promptParts=[
+    CONFIG.base_prompt.trim(),
+    `ELIGIBLE UNIVERSE RULE:\n${CONFIG.eligible_universe.trim()}`,
+    `EXPERIMENT SETTINGS:\n- Starting capital: ${CONFIG.starting_cash}\n- Required stock basket size: ${CONFIG.basket_size}\n- Cash is asset #11\n- ${equalInstruction}\n- Required output: one JSON object only\n- Research mode: fundamentals only\n- Default later-run decision: HOLD unless fundamentals demand action`,
+    priceRule,
+    benchmarkRule,
+    currentState,
+    `OPTIONAL NEWS / EVENT INPUT TO TRIAGE:\n${newsNotes?newsNotes:'- None supplied. Still check recent filings/earnings/news for fundamental changes if researching live.'}`,
+    `LAST 3 TIMEPOINTS:\n${last3.length?JSON.stringify(last3,null,2):'- None yet.'}`,
+    `YOUR TASK THIS RUN:\n${taskBlock}`,
+    `STRICT OUTPUT RULES:\n1) Output one JSON object only. No markdown after it.\n2) The schema uses placeholder keys like TICKER_1 only. Do not output placeholders. Replace them with researched current S&P 500 tickers.\n3) selected_holdings must contain exactly ${CONFIG.basket_size} stock tickers unless you explicitly state that fewer than ${CONFIG.basket_size} pass the fundamentals screen.\n4) Each selected ticker must include sp500_membership_checked: true.\n5) prices must be CURRENT quotes refreshed THIS run (never carried over from the prior run) and must include every non-cash selected holding; they are for accounting and valuation-risk sanity only. Recompute NAV and target_weights from these refreshed prices.\n6) positions are shares. Only non-negative long positions.\n7) cash is USD remaining and must be >= 0.\n8) target_weights must include all selected tickers and CASH. Sum should be approximately 1.0.\n9) Include fundamentals_scorecard with 0-100 quality score and evidence for each ranked fundamental pillar.\n10) Include fundamental_change_audit, valuation_risk_control, and news_triage.\n11) Include banned_inputs_check confirming you did not use performance, momentum, chart patterns, or analyst price targets.\n12) If decision is HOLD, explicitly say what you checked and why no action is needed.\n13) If decision is REALLOCATE, map every change to a material fundamental reason or valuation-burden reason.
+14) Include benchmark_accounting and benchmark_policy_check. Benchmark data is scoreboard accounting only and must not influence the decision.
+15) Include valuation_outlier_review and situation_independence_review for every selected holding.`,
+    `REQUIRED JSON SHAPE:\n${JSON.stringify(schema,null,2)}`,
+    'Begin fundamentals-only research and produce the JSON now.'
+  ];
+  currentPrompt=promptParts.join('\n\n');
+  trySetItem(KEY.currentPrompt,currentPrompt);
+  document.getElementById('output').textContent=currentPrompt;
+  queueAutoBackup('prompt-generated');
+  toast('Prompt generated');
+}
+function exampleSchema(){const stockWeight=CONFIG.initial_rule==='equal_11'?Number((1/(CONFIG.basket_size+1)).toFixed(6)):Number((1/CONFIG.basket_size).toFixed(6));const cashWeight=CONFIG.initial_rule==='equal_11'?stockWeight:0;return {version:APP_VERSION,timestamp:new Date().toISOString(),research_mode:'fundamentals_only',decision:'INITIAL_SELECT or HOLD or REALLOCATE',decision_subtype:'CORE_HOLD / FUNDAMENTAL_REALLOCATION / VALUATION_BURDEN_REALLOCATION / MECHANICAL_ELIGIBILITY_CLEANUP / INITIAL_SELECT',decision_reason:'Plain-English explanation using fundamentals only. Default to HOLD unless fundamentals demand action.',prices:{TICKER_1:0.0,TICKER_2:0.0},target_weights:{TICKER_1:stockWeight,TICKER_2:stockWeight,CASH:cashWeight},positions:{TICKER_1:0.0,TICKER_2:0.0},cash:0.0,thesis:'Why this basket is fundamentally strong. Do not mention stock performance.',cash_rationale:'Why cash weight is what it is.',evidence_notes:'Sources and uncertainty notes. No long quotes.',benchmark_accounting:{symbol:'SP500',sp500_price_index_level:0.0,sp500_price_index_date:'YYYY-MM-DD',source:'FRED SP500 price index, S&P Dow Jones Indices via FRED, or clearly identified equivalent',used_in_decision:false,unavailable_reason:''},benchmark_policy_check:{benchmark_used_for_selection:false,benchmark_used_for_hold_reallocate:false,relative_performance_used:false,outperformance_used_as_signal:false,underperformance_used_as_signal:false,benchmark_calculated_after_decision:true},banned_inputs_check:{price_performance_used:false,momentum_used:false,technical_analysis_used:false,analyst_price_targets_used:false,price_used_only_for_accounting:true},fundamental_change_audit:{default_decision:'HOLD unless material fundamentals changed',debt_balance_sheet:'no_change / improved / deteriorated + evidence',cash_fcf:'no_change / improved / deteriorated + evidence',profitability:'no_change / improved / deteriorated + evidence',moat_revenue_durability:'no_change / improved / deteriorated + evidence',necessity_durability:'situation_independent / mixed / situation_dependent + evidence',accounting_capital_allocation:'no_change / improved / deteriorated + evidence',governance_culture:'no_change / improved / deteriorated / uncertain + evidence',valuation_burden:'reasonable / demanding / excessive relative to fundamentals + evidence',conclusion:'HOLD or REALLOCATE_CANDIDATE and why'},valuation_risk_control:{used_as_performance_prediction:false,overpriced_for_fundamentals:false,pe_outlier_flag:'none / high_pe_justified / high_pe_unjustified / low_pe_value / low_pe_trap / not_meaningful',valuation_comment:'Explain only whether valuation requires unrealistic fundamentals.'},valuation_outlier_review:[{ticker:'TICKER_1',pe_context:'trailing/forward/normalized P/E; say if not meaningful',fcf_yield_or_cashflow_context:'FCF yield/cash conversion/capex burden',multiple_vs_quality:'reasonable / demanding / excessive',earnings_quality_adjustments:['one-time items, cyclicality, SBC, dilution, accounting distortions'],conclusion:'valuation supports HOLD / WATCH / REALLOCATE_CANDIDATE'}],situation_independence_review:[{ticker:'TICKER_1',demand_type:'situation_independent / mixed / situation_dependent',necessity_score_0_100:0,why_needed_or_not:'Mission-critical, everyday necessity, regulatory requirement, infrastructure, healthcare, payments, data workflow, or discretionary/fad/cyclical demand.',commodity_or_pricing_power_risk:'Explain whether necessary demand still lacks pricing power or has commodity/capital intensity risk.',conclusion:'durability supports HOLD / WATCH / REALLOCATE_CANDIDATE'}],news_triage:[{item:'news or filing item',source_type:'earnings / 10-Q / 10-K / 8-K / lawsuit / regulation / management / debt / product / price_move_only / other',fundamental_pillar_tested:'debt / cash flow / margins / moat / necessity / accounting / governance / valuation burden',evidence_strength:'low / medium / high',triage:'IGNORE / WATCH / HOLD / REALLOCATE_CANDIDATE',reason:'plain-language reason'}],fundamentals_scorecard:[{ticker:'TICKER_1',sp500_membership_checked:true,fundamental_quality_score_0_100:0,debt_balance_sheet:'rank #1 evidence',cash_fcf:'rank #2 evidence',profitability:'rank #3 evidence',moat_revenue_durability:'rank #4 evidence',situation_independence:'structural necessity / mixed / situation-dependent, with evidence',accounting_capital_allocation:'rank #5 evidence',culture_governance:'rank #6 evidence or uncertainty',valuation_risk:'rank #7 risk-control comment only, including P/E outlier if relevant',main_risk:'what could weaken the fundamentals'}],selected_holdings:[{ticker:'TICKER_1',target_weight:stockWeight,sp500_membership_checked:true,fundamental_reason:'why selected using hierarchy',sell_or_reduce_trigger:'fundamental deterioration, situation-dependence deterioration, or valuation-burden trigger'}],reallocation_plan:[{ticker:'TICKER_1',action:'hold/add/reduce/remove',from_weight:null,to_weight:stockWeight,reason:'fundamentals-only reason',hierarchy_pillar:'which pillar changed or why HOLD'}],risk_controls:{largest_asset_pct:stockWeight,cash_pct:cashWeight,concentration_warning:'string',known_unknowns:['string']}};}
+function copyPrompt(){if(!currentPrompt){toast('Generate first',false);return;}navigator.clipboard.writeText(currentPrompt).then(()=>toast('Prompt copied'));}
+function copySchema(){CONFIG=getConfigFromUI();navigator.clipboard.writeText(JSON.stringify(exampleSchema(),null,2)).then(()=>toast('Schema copied'));}
+
+
+function extractBenchmarkAccounting(obj){
+  const b=obj.benchmark_accounting||obj.benchmark||{};
+  const level=safeNum(b.sp500_price_index_level ?? b.price_index_level ?? b.sp500_level ?? b.level ?? b.close, NaN);
+  const date=String(b.sp500_price_index_date || b.price_index_date || b.date || b.as_of_date || b.asof_date || '').slice(0,10);
+  const source=String(b.source || b.source_note || b.benchmark_source || CONFIG.benchmark_source_note || 'AI JSON benchmark_accounting');
+  const unavailable=String(b.unavailable_reason||'').trim();
+  return {level,date,source,unavailable,raw:b};
+}
+function validateBenchmarkPolicy(obj){
+  const p=obj.benchmark_policy_check||{};
+  const bad=['benchmark_used_for_selection','benchmark_used_for_hold_reallocate','relative_performance_used','outperformance_used_as_signal','underperformance_used_as_signal'].filter(k=>p[k]===true);
+  return {ok:bad.length===0,bad,policy:p};
+}
+
+function parseAndRecord(){const raw=document.getElementById('ai-json').value.trim();if(!raw){toast('Paste JSON first',false);return;}if(rawFingerprint(raw)===(localStorage.getItem(KEY.lastRaw)||'')){toast('Duplicate paste detected',false);return;}CONFIG=getConfigFromUI();saveJSON(KEY.config,CONFIG);const obj=parseMaybeJSON(raw);if(!obj||typeof obj!=='object'){toast('Could not parse JSON',false);return;}const decision=String(obj.decision||'').trim().toUpperCase();if(!['INITIAL_SELECT','HOLD','REALLOCATE'].includes(decision)){toast('decision must be INITIAL_SELECT, HOLD, or REALLOCATE',false);return;}const pricesIn=obj.prices||{}, positionsIn=obj.positions||{}, weightsIn=obj.target_weights||obj.weights||{};const prices={}, positions={}, target_weights={};Object.keys(pricesIn).forEach(k=>{const t=normalizeTicker(k);if(validTicker(t))prices[t]=safeNum(pricesIn[k],0);});Object.keys(positionsIn).forEach(k=>{const t=normalizeTicker(k);const sh=safeNum(positionsIn[k],0);if(t==='CASH')return;if(/^TICKER/.test(t)){toast('Placeholder ticker found in positions. Replace TICKER_n with real researched tickers.',false);throw new Error('placeholder ticker');}if(!validTicker(t)){toast(`Invalid ticker in positions: ${t}`,false);throw new Error('bad ticker');}if(sh<0){toast(`Negative position not allowed: ${t}`,false);throw new Error('negative');}if(sh>0)positions[t]=sh;});Object.keys(weightsIn).forEach(k=>{const t=normalizeTicker(k);const w=safeNum(weightsIn[k],NaN);if(Number.isFinite(w))target_weights[t]=w;});const tickers=Object.keys(positions);if(tickers.length>CONFIG.basket_size){toast(`Too many stock holdings: ${tickers.length}/${CONFIG.basket_size}`,false);return;}for(const t of tickers){if(!prices[t]||prices[t]<=0){toast(`Missing valid accounting price for ${t}`,false);return;}}
+const cash=safeNum(obj.cash,NaN);if(!Number.isFinite(cash)||cash<0){toast('Missing or negative cash field',false);return;}if(CONFIG.require_weights){if(!Object.keys(target_weights).length){toast('Missing target_weights',false);return;}const wsum=sum(target_weights);if(Math.abs(wsum-1)>0.035){toast(`target_weights should sum near 1.0; got ${wsum.toFixed(4)}`,false);return;}if(target_weights.CASH===undefined){toast('target_weights must include CASH',false);return;}}
+const banned=obj.banned_inputs_check||{};const badFlags=['price_performance_used','momentum_used','technical_analysis_used','analyst_price_targets_used'].filter(k=>banned[k]===true);if(badFlags.length){toast(`Banned research inputs flagged true: ${badFlags.join(', ')}`,false);return;}const benchPolicy=validateBenchmarkPolicy(obj);if(!benchPolicy.ok){toast(`Benchmark was used as a decision signal: ${benchPolicy.bad.join(', ')}`,false);return;}const benchAcct=extractBenchmarkAccounting(obj);if(CONFIG.benchmark_enabled!==false && CONFIG.benchmark_require_in_json!==false && (!Number.isFinite(benchAcct.level)||benchAcct.level<=0)){toast('Missing valid benchmark_accounting.sp500_price_index_level. Re-run the AI output with the benchmark appendix.',false);return;}const selected=Array.isArray(obj.selected_holdings)?obj.selected_holdings:[];if(selected.some(x=>/^TICKER/.test(normalizeTicker(x.ticker)))){toast('Placeholder ticker found in selected_holdings',false);return;}if(selected.length && selected.length!==CONFIG.basket_size){toast(`selected_holdings should contain exactly ${CONFIG.basket_size}; got ${selected.length}`,false);return;}const scorecard=Array.isArray(obj.fundamentals_scorecard)?obj.fundamentals_scorecard:[];const nav=computeNAV(positions,prices,cash);if(nav<=0){toast('Computed NAV is not positive',false);return;}const pts=LEDGER.points||[];const timestamp=String(obj.timestamp||obj.time||new Date().toISOString());const point={app_version:APP_VERSION,timestamp,decision,prices,positions,cash,nav,cash_pct:cash/nav,target_weights,thesis:String(obj.thesis||obj.summary||'').trim(),decision_reason:String(obj.decision_reason||obj.reason||'').trim(),cash_rationale:String(obj.cash_rationale||'').trim(),evidence_notes:String(obj.evidence_notes||obj.sources||'').trim(),banned_inputs_check:banned,fundamental_change_audit:obj.fundamental_change_audit||{},valuation_risk_control:obj.valuation_risk_control||{},news_triage:Array.isArray(obj.news_triage)?obj.news_triage:[],fundamentals_scorecard:scorecard,selected_holdings:selected,reallocation_plan:Array.isArray(obj.reallocation_plan)?obj.reallocation_plan:[],risk_controls:obj.risk_controls||{},raw_version:obj.version||'',valuation_outlier_review:obj.valuation_outlier_review||{},situation_independence_review:obj.situation_independence_review||{},benchmark_policy_check:benchPolicy.policy};if(Number.isFinite(benchAcct.level)&&benchAcct.level>0){point.benchmark={symbol:'SP500',level:benchAcct.level,date:benchAcct.date||timestamp.slice(0,10),source:benchAcct.source,from_ai_json:true,raw_benchmark_accounting:benchAcct.raw,benchmark_policy_check:benchPolicy.policy,recorded_at:new Date().toISOString()};}point.turnover=pts.length?turnover(pts[pts.length-1],point):0;LEDGER.app_version=APP_VERSION;LEDGER.starting_cash=safeNum(CONFIG.starting_cash,10000);LEDGER.points=pts;LEDGER.points.push(point);
+if(!saveLedgerSafe()){
+  toast('Recorded in memory, but browser storage is full. Auto-save or Download Full State before closing.',false);
+}
+trySetItem(KEY.lastRaw,rawFingerprint(raw));document.getElementById('ai-json').value='';refreshAll();queueAutoBackup('recorded-point');maybeAutoFetchBenchmarkAfterRecord();toast('Recorded fundamentals timepoint ✓');}
+
+function fullState(){recomputeBenchmarks();return {app_version:APP_VERSION,exported_at:new Date().toISOString(),config:CONFIG,ledger:LEDGER,benchmark:LEDGER.benchmark||{},market_news:getNewsInput(),current_prompt:currentPrompt};}
+function downloadJSON(filename,obj){const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+function downloadLedger(){downloadJSON('prymis_quality_steward_v3_ledger.json',LEDGER);toast('Ledger downloaded');}
+function downloadState(){CONFIG=getConfigFromUI();trySetItem(KEY.news,getNewsInput());downloadJSON('prymis_quality_steward_v3_full_state.json',fullState());queueAutoBackup('manual-download-state');toast('Full state downloaded');}
+function copyState(){CONFIG=getConfigFromUI();navigator.clipboard.writeText(JSON.stringify(fullState(),null,2)).then(()=>toast('Full state copied — paste it into Restore to recover')).catch(()=>toast('Copy failed; use Download instead',false));}
+function restoreState(){
+  const raw=document.getElementById('restore-state').value.trim();
+  const st=parseMaybeJSON(raw);
+  if(!st||typeof st!=='object'){toast('Could not parse JSON',false);return;}
+  let cfg=null, led=null, prompt='', news=null;
+  if(st.config && st.ledger){ // full state export
+    cfg=st.config; led=st.ledger; prompt=st.current_prompt||''; news=st.market_news||'';
+  } else if(Array.isArray(st.points)){ // ledger-only export
+    led=st;
+  } else if(st.ledger && Array.isArray(st.ledger.points)){ // partial wrapper
+    led=st.ledger; cfg=st.config||null; prompt=st.current_prompt||''; news=st.market_news??null;
+  } else {
+    toast('Paste a Full State or a Ledger export.',false);return;
+  }
+  if(cfg)CONFIG=Object.assign(clone(DEFAULT_CONFIG),cfg);
+  LEDGER=Object.assign(clone(DEFAULT_LEDGER),led);
+  if(!Array.isArray(LEDGER.points))LEDGER.points=[];
+  currentPrompt=prompt||currentPrompt||'';
+  saveJSON(KEY.config,CONFIG);
+  saveLedgerSafe();
+  trySetItem(KEY.currentPrompt,currentPrompt);
+  if(news!==null){trySetItem(KEY.news,news);setNewsInput(news);}
+  setConfigToUI(CONFIG);
+  if(currentPrompt)document.getElementById('output').textContent=currentPrompt;
+  refreshAll();
+  queueAutoBackup('state-restored');
+  toast('State restored ✓');
+}
+function resetFresh(){if(!confirm('Reset this fundamentals steward run and start fresh? Back up via State tab first if you want to keep it.'))return;CONFIG=clone(DEFAULT_CONFIG);LEDGER=clone(DEFAULT_LEDGER);currentPrompt='';localStorage.removeItem(KEY.lastRaw);localStorage.removeItem(KEY.currentPrompt);localStorage.removeItem(KEY.news);saveJSON(KEY.config,CONFIG);saveLedgerSafe();setConfigToUI(CONFIG);setNewsInput('');document.getElementById('ai-json').value='';document.getElementById('restore-state').value='';const bl=document.getElementById('benchmark-level');if(bl)bl.value='';const bd=document.getElementById('benchmark-date');if(bd)bd.value='';document.getElementById('output').innerHTML='<span style="color:var(--dim);font-style:italic">Fresh run. Click Generate Prompt.</span>';refreshAll();toast('Fresh reset complete');}
+function copyLast3(){navigator.clipboard.writeText(JSON.stringify((LEDGER.points||[]).slice(-3),null,2)).then(()=>toast('Last 3 copied'));}
+function launchAI(which){if(!currentPrompt){toast('Generate prompt first',false);return;}const urls={gpt:'https://chat.openai.com/',claude:'https://claude.ai/new',gemini:'https://gemini.google.com/'};navigator.clipboard.writeText(currentPrompt).then(()=>{window.open(urls[which]||urls.gpt,'_blank');toast('Prompt copied + opening');});}
+
+document.querySelectorAll('.tab').forEach(tab=>{tab.onclick=()=>{document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));tab.classList.add('active');document.querySelector(`[data-content="${tab.dataset.tab}"]`)?.classList.add('active');if(tab.dataset.tab==='state'){updateStorageMeter();updateAutoSaveStatus();updateReminderStatus();}};});
+document.getElementById('generate-btn').onclick=generatePrompt;document.getElementById('copy-btn').onclick=copyPrompt;document.getElementById('parse-btn').onclick=()=>{try{parseAndRecord();}catch(e){console.error(e);}};document.getElementById('copy-schema-btn').onclick=copySchema;document.getElementById('download-ledger').onclick=downloadLedger;document.getElementById('download-state').onclick=downloadState;document.getElementById('copy-state').onclick=copyState;document.getElementById('choose-autosave-folder').onclick=chooseAutoBackupFolder;document.getElementById('autosave-now').onclick=()=>autoSaveFullState('manual',true);document.getElementById('forget-autosave-folder').onclick=forgetAutoBackupFolder;document.getElementById('request-notifications').onclick=requestNotifications;document.getElementById('test-reminder').onclick=()=>showDisciplineReminder(true);document.getElementById('download-reminder-ics').onclick=downloadReminderICS;document.getElementById('record-benchmark-level').onclick=recordManualBenchmark;document.getElementById('fetch-benchmark-latest').onclick=()=>fetchBenchmarkForLatest(true);document.getElementById('backfill-benchmark').onclick=backfillBenchmarkFromFred;document.getElementById('clear-benchmark-latest').onclick=clearLatestBenchmark;document.getElementById('restore-btn').onclick=restoreState;document.getElementById('clear-restore').onclick=()=>{document.getElementById('restore-state').value='';};document.getElementById('copy-last3').onclick=copyLast3;document.getElementById('reset-btn-1').onclick=resetFresh;document.getElementById('reset-btn-2').onclick=resetFresh;document.querySelectorAll('.ai').forEach(b=>b.onclick=()=>launchAI(b.dataset.ai));
+['starting-cash','basket-size','initial-rule','require-weights','eligible-universe','base-prompt','benchmark-enabled','benchmark-symbol','benchmark-auto-fetch','benchmark-source-note'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{CONFIG=getConfigFromUI();saveJSON(KEY.config,CONFIG);LEDGER.starting_cash=CONFIG.starting_cash;recomputeBenchmarks();saveLedgerSafe();refreshAll();queueAutoBackup('settings-saved');toast('Settings saved');}));document.getElementById('market-news').addEventListener('input',()=>trySetItem(KEY.news,getNewsInput()));['reminder-enabled','reminder-time'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{saveReminderSettings();startReminderLoop();queueAutoBackup('reminder-settings');toast('Reminder settings saved');}));
+function init(){CONFIG=Object.assign(clone(DEFAULT_CONFIG),CONFIG||{});if(!LEDGER||!Array.isArray(LEDGER.points))LEDGER=clone(DEFAULT_LEDGER);LEDGER.app_version=APP_VERSION;LEDGER.starting_cash=LEDGER.starting_cash||CONFIG.starting_cash;setConfigToUI(CONFIG);setReminderToUI();setNewsInput(localStorage.getItem(KEY.news)||'');if(currentPrompt)document.getElementById('output').textContent=currentPrompt;recomputeBenchmarks();saveJSON(KEY.config,CONFIG);saveLedgerSafe();refreshAll();updateAutoSaveStatus();startReminderLoop();toast('Fundamentals steward loaded');}
+init();
+})();
+</script>
+</body>
+</html>
