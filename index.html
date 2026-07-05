@@ -1,11 +1,13 @@
 
 
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-<title>Prymis — S&amp;P 500 Quality Steward v3.1</title>
+<title>Prymis — S&amp;P 500 Quality Steward v3.3 GitHub-safe</title>
 <style>
 :root{
   --deep:#0f0c0a;--panel:#1a1612;--panel2:#2e2218;--line:#3d3028;
@@ -34,7 +36,7 @@ button{border:0;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointe
 <body>
 <div class="header">
   <div>
-    <h1>🏛️ Prymis — S&amp;P 500 Quality Steward v3.1</h1>
+    <h1>🏛️ Prymis — S&amp;P 500 Quality Steward v3.3</h1>
     <div class="sub">Choose 10 S&amp;P 500 companies by fundamentals only. Benchmarking is scoreboard/accounting only. Cash is asset #11. Default decision: HOLD unless fundamentals demand change.</div>
   </div>
   <div class="row">
@@ -182,6 +184,20 @@ button{border:0;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointe
         <div class="statusline" id="browser-persist-status">No browser snapshot loaded yet.</div>
         <div class="small-note">Browser storage can still be wiped by cache clearing/private mode. A downloaded backup JSON remains the safest archive.</div>
       </fieldset>
+      <fieldset><legend>🌐 GitHub Pages Backup</legend>
+        <div class="info"><h4>Hosted-page safe restore</h4><p>GitHub Pages cannot write to your repository and cannot silently reopen a local folder. For hosted use, put a backup JSON file in your repo and load it by URL, or upload/download JSON manually.</p></div>
+        <div class="input-group">
+          <label class="input-label">Backup JSON URL or relative path</label>
+          <input id="github-backup-url" value="prymis_backups/prymis_quality_steward_v3_latest.json" placeholder="Example: prymis_backups/prymis_quality_steward_v3_latest.json">
+        </div>
+        <div class="row">
+          <button class="btn-good" id="load-github-backup">🌐 Load Backup From URL</button>
+          <button class="btn-ghost btn-small" id="copy-github-paths">📋 Copy suggested repo paths</button>
+        </div>
+        <div class="statusline" id="github-backup-status">GitHub mode: use URL restore, Upload Backup JSON, or Download Full State. Folder auto-save is browser-limited.</div>
+        <div class="small-note">Recommended repo path: <code>prymis_backups/prymis_quality_steward_v3_latest.json</code>. A hosted page can fetch that file if it is committed to the same GitHub Pages site. It still cannot save changes back to GitHub automatically.</div>
+      </fieldset>
+
       <fieldset><legend>🛡️ Auto-save Folder</legend>
         <div class="info"><h4>Adjacent-folder backup</h4><p>Pick a folder once — ideally a folder next to this HTML file, such as <b>prymis_backups</b>. The folder keeps a latest full-state file, a daily canonical ledger that grows only once per calendar day, and timestamped archive snapshots for every save.</p></div>
         <div class="row">
@@ -251,7 +267,7 @@ button{border:0;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointe
 (function(){
 'use strict';
 
-const APP_VERSION = 'prymis_sp500_quality_steward_v3_1';
+const APP_VERSION = 'prymis_sp500_quality_steward_v3_3_github_safe';
 const KEY = {
   config:'prymis_quality_v3_config', ledger:'prymis_quality_v3_ledger', lastRaw:'prymis_quality_v3_last_raw', currentPrompt:'prymis_quality_v3_current_prompt', news:'prymis_quality_v3_news',
   fullState:'prymis_quality_v3_full_state_snapshot',
@@ -464,7 +480,8 @@ async function writeDailyLedgerSnapshot(dir,state,reason='auto'){
   return daily;
 }
 async function chooseAutoBackupFolder(){
-  if(!window.showDirectoryPicker){toast('This browser does not support folder auto-save. Use Download Full State instead.',false);updateAutoSaveStatus();return;}
+  if(!window.isSecureContext){toast('Folder auto-save requires HTTPS or localhost. Use Upload/Download JSON or GitHub URL restore.',false);updateAutoSaveStatus();return;}
+  if(!window.showDirectoryPicker){toast('This browser does not support the folder picker. Use Upload/Download JSON or GitHub URL restore.',false);updateAutoSaveStatus();return;}
   try{
     const handle=await window.showDirectoryPicker({mode:'readwrite'});
     if(!await verifyDirPermission(handle)){toast('Folder permission was not granted.',false);return;}
@@ -478,8 +495,10 @@ async function chooseAutoBackupFolder(){
 }
 async function forgetAutoBackupFolder(){dirHandleCache=null;await idbDel(AUTO_DIR_KEY).catch(()=>{});updateAutoSaveStatus();toast('Backup folder forgotten');}
 async function autoSaveFullState(reason='auto',showToast=false){
-  const dir=await getAutoBackupDirHandle(true);
-  if(!dir){if(showToast)toast('No backup folder connected.',false);return false;}
+  // Important for GitHub Pages: background auto-saves cannot request folder permission.
+  // Only manual clicks may prompt; silent auto-save uses the folder only if permission is already granted.
+  const dir=await getAutoBackupDirHandle(!!showToast);
+  if(!dir){if(showToast)toast('No usable backup folder permission. Use Upload/Download JSON or GitHub URL restore.',false);return false;}
   try{
     CONFIG=getConfigFromUI();
     const state=fullState();
@@ -515,6 +534,65 @@ async function restoreFromAutoSaveFolder(){
   }catch(e){console.error(e);toast('Could not read backup folder. Reconnect it or upload a JSON backup.',false);}
 }
 
+function getGitHubBackupURL(){
+  const el=document.getElementById('github-backup-url');
+  return (el && el.value.trim()) || 'prymis_backups/prymis_quality_steward_v3_latest.json';
+}
+function updateGitHubBackupStatus(msg,ok=true){
+  const el=document.getElementById('github-backup-status');
+  if(!el)return;
+  el.style.borderColor=ok?'var(--line)':'var(--bad)';
+  el.textContent=msg;
+}
+async function loadBackupFromURL(){
+  const raw=getGitHubBackupURL();
+  try{
+    const url=new URL(raw, location.href);
+    updateGitHubBackupStatus('Loading backup from '+url.href+' ...',true);
+    const res=await fetch(url.href,{cache:'no-store'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const txt=await res.text();
+    const st=parseMaybeJSON(txt);
+    if(!applyStateObject(st,'URL backup')){
+      updateGitHubBackupStatus('The file loaded, but it was not a readable Prymis backup JSON.',false);
+      return;
+    }
+    document.getElementById('restore-state').value=txt;
+    updateGitHubBackupStatus('Loaded backup from '+url.href,true);
+  }catch(e){
+    console.error(e);
+    updateGitHubBackupStatus('Could not load backup from URL. Confirm the JSON file is committed to the GitHub Pages site and the path is correct.',false);
+    toast('Could not load backup URL. Use Upload Backup JSON or check the repo path.',false);
+  }
+}
+function copyGitHubPaths(){
+  const msg=[
+    'Recommended GitHub Pages backup paths:',
+    '',
+    '1) Commit your latest full-state backup JSON here:',
+    '   prymis_backups/prymis_quality_steward_v3_latest.json',
+    '',
+    '2) Then use this relative URL in the app:',
+    '   prymis_backups/prymis_quality_steward_v3_latest.json',
+    '',
+    'Notes:',
+    '- GitHub Pages can READ this JSON if it is committed to the published repo/site.',
+    '- The browser cannot SAVE changes back into GitHub automatically.',
+    '- For daily use, click Download Full State after a run, then upload/commit that JSON when you want GitHub-hosted restore.'
+  ].join('\n');
+  navigator.clipboard.writeText(msg).then(()=>toast('GitHub backup paths copied')).catch(()=>{document.getElementById('restore-state').value=msg;toast('Copy failed; paths placed in Restore box',false);});
+}
+function updateGitHubModeStatus(){
+  const hosted = location.hostname && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
+  if(location.hostname.endsWith('github.io')){
+    updateGitHubBackupStatus('GitHub Pages detected. Folder write-back is not available; use URL restore for committed JSON, or Upload/Download JSON.',true);
+  }else if(hosted){
+    updateGitHubBackupStatus('Hosted page detected. Folder access may be limited; URL restore and Upload/Download JSON are the durable paths.',true);
+  }else{
+    updateGitHubBackupStatus('Local/localhost mode. Folder picker may work in Chrome/Edge; URL restore and Upload/Download JSON also work.',true);
+  }
+}
+
 function queueAutoBackup(reason='auto'){
   queueBrowserSnapshot(reason);
   clearTimeout(autoBackupTimer);
@@ -522,12 +600,21 @@ function queueAutoBackup(reason='auto'){
 }
 async function updateAutoSaveStatus(){
   const el=document.getElementById('autosave-status'); if(!el)return;
-  if(!window.showDirectoryPicker){el.textContent='Folder auto-save is not supported in this browser. Use Download Full State.';return;}
+  const hosted = location.hostname && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
+  if(!window.isSecureContext){el.textContent='Folder auto-save unavailable: this page is not in a secure context. Use Upload/Download JSON or GitHub URL restore.';return;}
+  if(!window.showDirectoryPicker){el.textContent='Folder auto-save unavailable in this browser. Chrome/Edge support it best. Use Upload/Download JSON or GitHub URL restore.';return;}
   const h=await idbGet(AUTO_DIR_KEY).catch(()=>null);
-  if(!h){el.textContent='No backup folder connected.';return;}
+  if(!h){
+    el.textContent=hosted
+      ? 'No folder connected. On GitHub Pages, folder access is optional and must be chosen by user click; the page cannot read/write folders automatically.'
+      : 'No backup folder connected.';
+    return;
+  }
   let perm='prompt';
   try{if(h.queryPermission)perm=await h.queryPermission({mode:'readwrite'});}catch(e){}
-  el.textContent=`Backup folder remembered. Permission: ${perm}. Click Auto-save Now to refresh permission if needed. Daily ledger appends only on a new calendar day; archive saves every snapshot.`;
+  el.textContent=hosted
+    ? `Backup folder handle remembered, permission: ${perm}. GitHub Pages cannot silently reopen or write to a folder unless the browser grants permission. Use Auto-save Now after opening, or use GitHub URL / Upload JSON for durable restore.`
+    : `Backup folder remembered. Permission: ${perm}. Click Auto-save Now to refresh permission if needed. Daily ledger appends only on a new calendar day; archive saves every snapshot.`;
 }
 /* --------------------------------------------------- */
 
@@ -884,7 +971,7 @@ function copyLast3(){navigator.clipboard.writeText(JSON.stringify((LEDGER.points
 function launchAI(which){if(!currentPrompt){toast('Generate prompt first',false);return;}const urls={gpt:'https://chat.openai.com/',claude:'https://claude.ai/new',gemini:'https://gemini.google.com/'};navigator.clipboard.writeText(currentPrompt).then(()=>{window.open(urls[which]||urls.gpt,'_blank');toast('Prompt copied + opening');});}
 
 document.querySelectorAll('.tab').forEach(tab=>{tab.onclick=()=>{document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));tab.classList.add('active');document.querySelector(`[data-content="${tab.dataset.tab}"]`)?.classList.add('active');if(tab.dataset.tab==='state'){updateStorageMeter();updateAutoSaveStatus();updateBrowserPersistStatus();updateReminderStatus();}};});
-document.getElementById('generate-btn').onclick=generatePrompt;document.getElementById('copy-btn').onclick=copyPrompt;document.getElementById('parse-btn').onclick=()=>{try{parseAndRecord();}catch(e){console.error(e);}};document.getElementById('copy-schema-btn').onclick=copySchema;document.getElementById('download-ledger').onclick=downloadLedger;document.getElementById('download-state').onclick=downloadState;document.getElementById('copy-state').onclick=copyState;document.getElementById('upload-backup').onclick=uploadBackupFile;document.getElementById('backup-file-input').onchange=handleBackupFileUpload;document.getElementById('save-browser-snapshot').onclick=()=>saveBrowserSnapshot('manual-browser-save',true);document.getElementById('load-browser-snapshot').onclick=()=>loadBrowserSnapshot(true);document.getElementById('choose-autosave-folder').onclick=chooseAutoBackupFolder;document.getElementById('autosave-now').onclick=()=>autoSaveFullState('manual',true);document.getElementById('restore-from-autosave-folder').onclick=restoreFromAutoSaveFolder;document.getElementById('forget-autosave-folder').onclick=forgetAutoBackupFolder;document.getElementById('request-notifications').onclick=requestNotifications;document.getElementById('test-reminder').onclick=()=>showDisciplineReminder(true);document.getElementById('download-reminder-ics').onclick=downloadReminderICS;document.getElementById('record-benchmark-level').onclick=recordManualBenchmark;document.getElementById('fetch-benchmark-latest').onclick=()=>fetchBenchmarkForLatest(true);document.getElementById('backfill-benchmark').onclick=backfillBenchmarkFromFred;document.getElementById('clear-benchmark-latest').onclick=clearLatestBenchmark;document.getElementById('restore-btn').onclick=restoreState;document.getElementById('clear-restore').onclick=()=>{document.getElementById('restore-state').value='';};document.getElementById('copy-last3').onclick=copyLast3;document.getElementById('reset-btn-1').onclick=resetFresh;document.getElementById('reset-btn-2').onclick=resetFresh;document.querySelectorAll('.ai').forEach(b=>b.onclick=()=>launchAI(b.dataset.ai));
+document.getElementById('generate-btn').onclick=generatePrompt;document.getElementById('copy-btn').onclick=copyPrompt;document.getElementById('parse-btn').onclick=()=>{try{parseAndRecord();}catch(e){console.error(e);}};document.getElementById('copy-schema-btn').onclick=copySchema;document.getElementById('download-ledger').onclick=downloadLedger;document.getElementById('download-state').onclick=downloadState;document.getElementById('copy-state').onclick=copyState;document.getElementById('upload-backup').onclick=uploadBackupFile;document.getElementById('backup-file-input').onchange=handleBackupFileUpload;document.getElementById('save-browser-snapshot').onclick=()=>saveBrowserSnapshot('manual-browser-save',true);document.getElementById('load-browser-snapshot').onclick=()=>loadBrowserSnapshot(true);document.getElementById('choose-autosave-folder').onclick=chooseAutoBackupFolder;document.getElementById('autosave-now').onclick=()=>autoSaveFullState('manual',true);document.getElementById('restore-from-autosave-folder').onclick=restoreFromAutoSaveFolder;document.getElementById('forget-autosave-folder').onclick=forgetAutoBackupFolder;document.getElementById('load-github-backup').onclick=loadBackupFromURL;document.getElementById('copy-github-paths').onclick=copyGitHubPaths;document.getElementById('request-notifications').onclick=requestNotifications;document.getElementById('test-reminder').onclick=()=>showDisciplineReminder(true);document.getElementById('download-reminder-ics').onclick=downloadReminderICS;document.getElementById('record-benchmark-level').onclick=recordManualBenchmark;document.getElementById('fetch-benchmark-latest').onclick=()=>fetchBenchmarkForLatest(true);document.getElementById('backfill-benchmark').onclick=backfillBenchmarkFromFred;document.getElementById('clear-benchmark-latest').onclick=clearLatestBenchmark;document.getElementById('restore-btn').onclick=restoreState;document.getElementById('clear-restore').onclick=()=>{document.getElementById('restore-state').value='';};document.getElementById('copy-last3').onclick=copyLast3;document.getElementById('reset-btn-1').onclick=resetFresh;document.getElementById('reset-btn-2').onclick=resetFresh;document.querySelectorAll('.ai').forEach(b=>b.onclick=()=>launchAI(b.dataset.ai));
 ['starting-cash','basket-size','initial-rule','require-weights','eligible-universe','base-prompt','benchmark-enabled','benchmark-symbol','benchmark-auto-fetch','benchmark-source-note'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{CONFIG=getConfigFromUI();saveJSON(KEY.config,CONFIG);LEDGER.starting_cash=CONFIG.starting_cash;recomputeBenchmarks();saveLedgerSafe();refreshAll();queueAutoBackup('settings-saved');toast('Settings saved');}));document.getElementById('market-news').addEventListener('input',()=>{trySetItem(KEY.news,getNewsInput());queueBrowserSnapshot('news-input');});['reminder-enabled','reminder-time'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{saveReminderSettings();startReminderLoop();queueAutoBackup('reminder-settings');toast('Reminder settings saved');}));
 async function init(){
   CONFIG=Object.assign(clone(DEFAULT_CONFIG),CONFIG||{});
@@ -901,6 +988,7 @@ async function init(){
   saveLedgerSafe();
   refreshAll();
   updateAutoSaveStatus();
+  updateGitHubModeStatus();
   updateBrowserPersistStatus();
   startReminderLoop();
   saveBrowserSnapshot('startup-synced',false);
