@@ -124,6 +124,14 @@ details .inner{padding:0 12px 12px}
 svg{display:block;width:100%;height:auto}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:.66rem;color:var(--dim);margin-top:10px}
 .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.legend i.dash{width:16px;height:0;border-radius:0;border-top:1.6px dashed var(--mid);vertical-align:2px}
+
+/* ---- benchmark bookkeeping: recorded plainly, kept out of the rules ---- */
+label.chk{display:flex;gap:9px;align-items:center;cursor:pointer;
+  font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+label.chk input{width:auto;padding:0;accent-color:var(--measured)}
+label.chk:hover{color:var(--paper)}
+input.spxin{width:106px;padding:5px 8px;font-size:.75rem;text-align:right}
 </style>
 </head>
 <body>
@@ -131,13 +139,13 @@ svg{display:block;width:100%;height:auto}
 <header>
   <h1>Prymis <span>IV</span></h1>
   <div class="tagline">Blind-scored quality, with error bars. Nothing moves unless the bars separate.</div>
-  <div class="readout">NAV <b id="hd-nav">—</b> · Q <b id="hd-q">—</b> · Cash bar <b id="hd-cash">—</b> · Run <b id="hd-run">0</b></div>
+  <div class="readout">NAV <b id="hd-nav">—</b> · Q <b id="hd-q">—</b> · Cash bar <b id="hd-cash">—</b> · Run <b id="hd-run">0</b><span id="hd-bm-wrap" style="display:none"> · vs S&amp;P <b id="hd-bm">—</b></span></div>
 </header>
 
 <nav role="tablist">
   <button role="tab" aria-selected="true" data-view="run">Run</button>
   <button role="tab" aria-selected="false" data-view="basket">Basket &amp; Bench</button>
-  <button role="tab" aria-selected="false" data-view="ledger">Ledger</button>
+  <button role="tab" aria-selected="false" data-view="ledger">Ledger &amp; S&amp;P</button>
   <button role="tab" aria-selected="false" data-view="triggers">Triggers &amp; Ghosts</button>
   <button role="tab" aria-selected="false" data-view="data">Rubric &amp; Data</button>
 </nav>
@@ -234,17 +242,35 @@ svg{display:block;width:100%;height:auto}
   </div>
 </section>
 
-<!-- ═══════════════ LEDGER ═══════════════ -->
+<!-- ═══════════════ LEDGER & BENCHMARK ═══════════════ -->
 <section class="view" data-view="ledger">
   <div class="card">
     <h2><span>Runs</span><span class="eyebrow">newest first</span></h2>
     <div class="body" id="runs-table"><p class="empty">No runs yet.</p></div>
   </div>
+
   <div class="card">
-    <h2><span>NAV against the index</span><span class="eyebrow">bookkeeping — not an input, and not a result at this sample size</span></h2>
+    <h2><span>NAV against the S&amp;P 500</span><span class="eyebrow" id="bm-tag">no index levels yet</span></h2>
     <div class="body">
+      <div class="kpis" id="bm-kpis"></div>
       <div id="navchart"></div>
-      <p class="note">Kept off the Run tab on purpose. Over a handful of runs this line carries no information about whether the process works, and reading it daily is the main channel by which benchmark awareness re-enters a system designed to exclude it.</p>
+      <div class="legend">
+        <span><i style="background:var(--measured)"></i>this basket, rebased to 100</span>
+        <span><i class="dash"></i>S&amp;P 500 price index, rebased to 100</span>
+        <span>· · · start level</span>
+      </div>
+      <div id="spreadchart"></div>
+      <div id="bm-msg"></div>
+      <p class="note">Both lines start at 100 on the first run that carries an index level, so the vertical axis reads as percent since inception and the only quantity on display is the gap between them. The lower panel is that gap on its own: green where the basket leads, amber where the index does.</p>
+      <details>
+        <summary>Index levels on record — edit or backfill</summary>
+        <div class="inner">
+          <p class="note" style="margin-bottom:10px">A run recorded without an index level leaves a hole. Type the S&amp;P 500 close for that date and the line closes over it. Editing a level changes the chart and nothing else — no rule reads this column.</p>
+          <div id="bm-levels"></div>
+        </div>
+      </details>
+      <p class="note">Kept off the Run tab on purpose. Over a handful of runs this line carries no information about whether the process works, and reading it daily is the main channel by which benchmark awareness re-enters a system designed to exclude it. The level is bookkeeping: the app records it, the rules never see it, and a level that looks impossible is dropped rather than allowed to reject a run whose research is sound.</p>
+      <label class="chk"><input type="checkbox" id="cfg-headerbm"> Show the spread in the header</label>
     </div>
   </div>
 </section>
@@ -334,7 +360,7 @@ svg{display:block;width:100%;height:auto}
 'use strict';
 
 /* ══════════════════ 1 · RUBRIC ══════════════════ */
-const VERSION='prymis_iv_1_0';
+const VERSION='prymis_iv_1_1';
 const PILLARS=[
   {k:'balance_sheet',   n:'Balance-sheet safety',        w:20, anchor:'90+: survives a severe cycle with no external financing. 70-89: sound, one identifiable dependency. 50-69: refinancing or coverage exposure. <50: impaired.'},
   {k:'fcf_durability',  n:'Free-cash-flow durability',   w:20, anchor:'90+: self-funds reinvestment through a full cycle. 70-89: durable but capex-sensitive. 50-69: conversion depends on favourable conditions. <50: not self-funding.'},
@@ -355,7 +381,7 @@ const VETOES=['accounting_fraud','material_restatement','disqualifying_governanc
 
 /* ══════════════════ 2 · STATE ══════════════════ */
 const BLANK={version:VERSION,created:new Date().toISOString(),
-  cfg:{max:15,bench:5,tenure:3,oppcap:200,ceiling:1.5,margin:0,opacity:15,startCash:10000,stale:5,initial:10,benchRotate:1,tierSpread:0.3,valTilt:150},
+  cfg:{max:15,bench:5,tenure:3,oppcap:200,ceiling:1.5,margin:0,opacity:15,startCash:10000,stale:5,initial:10,benchRotate:1,tierSpread:0.3,valTilt:150,headerBench:false},
   holdings:{},   // ticker -> {shares, price, sinceRun}
   bench:[],      // tickers
   cash:0, runs:[], triggers:{}, ghosts:[], news:'', slots:null, lastPrompt:'', nonce:''};
@@ -376,8 +402,12 @@ const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=x=>Number.isFinite(x)?'$'+x.toLocaleString(undefined,{maximumFractionDigits:0}):'—';
 const pct=x=>Number.isFinite(x)?(x*100).toFixed(1)+'%':'—';
+const sgn=(x,d=1)=>(x>=0?'+':'')+x.toFixed(d);
 const tk=t=>String(t||'').trim().toUpperCase().replace(/\s+/g,'');
 const okTicker=t=>/^[A-Z][A-Z0-9.\-]{0,11}$/.test(t)&&!/^TICKER/.test(t)&&!/^SLOT/.test(t);
+// An index level of null, 0 or NaN all mean the same thing: no level on record.
+const spxOf=r=>{const v=Number(r&&r.spx);return Number.isFinite(v)&&v>0?v:null;};
+const dayOf=d=>{const t=Date.parse(String(d||'').slice(0,10)+'T12:00:00Z');return Number.isFinite(t)?t:null;};
 function toast(m,bad){const t=$('#toast');t.textContent=m;t.className='on'+(bad?' bad':'');setTimeout(()=>t.className='',3400);}
 function b64(s){return btoa(unescape(encodeURIComponent(s)));}
 function shuffle(a){const x=a.slice();for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];}return x;}
@@ -570,6 +600,10 @@ function buildPrompt(){
   S.slots=slots;
 
   S.nonce='PX-'+Math.random().toString(36).slice(2,8).toUpperCase()+'-'+Math.random().toString(36).slice(2,8).toUpperCase();
+  // The index baseline travels inside the seal for the same reason the scores do:
+  // a relative-return figure visible during the blind pass is the contamination
+  // this whole arrangement exists to prevent.
+  const bmBase=benchSeries().base;
   const sealed={
     nonce:S.nonce,
     run:S.runs.length,
@@ -578,7 +612,9 @@ function buildPrompt(){
     prior:Object.keys(scoresOf(lastRun())).map(t=>`${t} ${lastRun().scores[t].composite}`).join(', '),
     open_triggers:Object.values(S.triggers).filter(x=>x.status==='pending')
       .map(x=>`${x.ticker}/${x.pillar}: ${x.text}`).slice(0,20),
-    last:lastRun()?`${lastRun().decision} — ${String(lastRun().reason).slice(0,300)}`:null
+    last:lastRun()?`${lastRun().decision} — ${String(lastRun().reason).slice(0,300)}`:null,
+    benchmark_baseline:bmBase?{date:bmBase.date,index_level:bmBase.spx,
+      capital:Number(bmBase.nav.toFixed(2))}:null
   };
 
   const P=[];
@@ -662,6 +698,13 @@ function buildPrompt(){
   P.push('');
   P.push('BANNED: price performance, momentum, technicals, chart patterns, analyst targets, benchmark or relative return. Price is for share accounting and valuation-burden sanity only. Refresh every price live this run; never carry the previous run\u2019s prices.');
   P.push('');
+  P.push('BENCHMARK BOOKKEEPING — two figures, both required, neither one an input. Set used_in_decision:false and mean it.');
+  P.push('  · benchmark_accounting.sp500_price_index_level — the current S&P 500 price index level (the cash index, ^GSPC: not futures, not a total-return variant, not an ETF share price), plus benchmark_accounting.date, the date you read it on.');
+  P.push('  · benchmark_accounting.sp500_nav — what this basket\u2019s capital would be worth today had it sat in the index instead. The baseline you need is inside the sealed block as benchmark_baseline: {date, index_level, capital}. Compute capital × current_level ÷ baseline index_level, and write that arithmetic out in sp500_nav_basis with the numbers you used.');
+  P.push(`  · If benchmark_baseline is null, this run starts the clock: report sp500_nav as ${first?'the starting capital':'the capital under management figure'} from Part 0, because at the moment a baseline is set the basket and the index are worth the same thing by construction.`);
+  P.push('  · If you could not decode the sealed block, report the level, set sp500_nav to null, and say so in sp500_nav_basis. Do not invent a baseline.');
+  P.push('  The baseline sits inside the seal rather than in plain sight for the same reason the rest of the history does: a relative-return number in front of you while you score is the exact contamination this instrument exists to prevent. The app recomputes both figures from its own records and draws its own; no rule in the system reads either. Get one wrong and you have changed a chart, nothing more. Leave the level out and the chart carries a hole that has to be filled in by hand.');
+  P.push('');
   if(S.news.trim()){P.push('EVENTS TO TRIAGE');P.push(S.news.trim());P.push('For each: this matters only if it changes debt / cash flow / margins / moat / necessity / accounting / governance / valuation burden. Otherwise IGNORE.');P.push('');}
   P.push('════ OUTPUT ════');
   P.push('One JSON object. blind_scores first. No prose after it.');
@@ -698,7 +741,9 @@ function schema(slots){
       weight_delta_bps:0,evidence:'what changed on the quality side',falsifier:'what would show this increment was wrong',
       price_contamination_check:{score_moved_with_price:false,blind_measured:true}}],
     bench:[{ticker:'BENCH_NAME',keep:true,reason:'why it stays or goes'}],
-    benchmark_accounting:{sp500_price_index_level:0.0,date:'YYYY-MM-DD',used_in_decision:false},
+    benchmark_accounting:{sp500_price_index_level:0.0,date:'YYYY-MM-DD',
+      sp500_nav:0.0,sp500_nav_basis:'baseline capital × current level ÷ baseline level, with the numbers',
+      used_in_decision:false},
     banned_inputs_check:{price_performance_used:false,momentum_used:false,technical_analysis_used:false,
       analyst_price_targets_used:false,benchmark_used_in_decision:false,price_used_only_for_accounting:true},
     evidence_notes:'sources and uncertainty. no long quotations.'
@@ -779,6 +824,18 @@ function record(){
   if(age>S.cfg.stale||age<-1)
     return fail(`research_date is ${rd}, ${age} days old. The model was not looking at live data — it recalled prices from training. Turn on web search or grounding in the tool you are pasting into, then run it again.`);
 
+  // ── benchmark level. Bookkeeping only, so it is validated separately from
+  // the research and a bad one is dropped rather than used to reject the run.
+  const bmk=o.benchmark_accounting||{};
+  let spx=num(bmk.sp500_price_index_level,NaN);
+  const bmNavIn=num(bmk.sp500_nav,NaN);
+  const spxDate=String(bmk.date||'').slice(0,10)||rd;
+  let spxNote='';
+  if(!(Number.isFinite(spx)&&spx>0)){
+    spx=null;
+    spxNote='No S&P 500 level came back with this run, so it sits as a hole in the benchmark chart. Type the close for '+rd+' under Ledger & S&P and the line closes over it.';
+  }
+
   const prev=lastRun();
   if(prev){
     const common=Object.keys(prices).filter(t=>prev.holdings[t]&&prev.holdings[t].price>0);
@@ -787,9 +844,18 @@ function record(){
       const med=mv[Math.floor(mv.length/2)];
       if(med>0.25)return fail(`Prices moved a median of ${(med*100).toFixed(0)}% across the basket since ${prev.date}. That is not a market move, it is a different dataset. Check that the model actually fetched live quotes.`);
     }
-    const spx=num((o.benchmark_accounting||{}).sp500_price_index_level,NaN);
-    if(Number.isFinite(spx)&&Number.isFinite(prev.spx)&&prev.spx>0&&Math.abs(spx/prev.spx-1)>0.15)
-      return fail(`The S&P level ${spx} is ${((spx/prev.spx-1)*100).toFixed(0)}% from the ${prev.spx} recorded on ${prev.date}. The model is not reading current data.`);
+    // The index tolerance widens with the gap between runs, because this is an
+    // event-driven cadence: two runs six months apart can legitimately straddle
+    // a 30% move, and a fixed 15% band would reject the honest ones.
+    const pspx=spxOf(prev);
+    if(spx&&pspx){
+      const gapDays=Math.max(0,Math.round(((dayOf(rd)||Date.now())-(dayOf(prev.date)||Date.now()))/864e5));
+      const lim=Math.min(0.6,0.15+Math.max(0,gapDays-30)*0.003);
+      if(Math.abs(spx/pspx-1)>lim){
+        spxNote=`Reported index level ${spx} is ${sgn((spx/pspx-1)*100,0)}% from the ${pspx} recorded on ${prev.date}, ${gapDays} day(s) earlier. Dropped as unreadable rather than allowed to reject a run whose research is sound — backfill it by hand under Ledger & S&P.`;
+        spx=null;
+      }
+    }
   }
 
   // ── repairs. You get one paste, so the app does arithmetic the model fumbled
@@ -845,6 +911,15 @@ function record(){
   const nav=navOf(nh,cash);
   if(!(nav>0))return fail('Computed NAV is not positive.');
 
+  // ── index NAV. The model is asked for it so the figure is on the record in its
+  // own words; the ledger computes it independently and the ledger's is the one
+  // drawn. A run with no baseline yet is the run that sets one, and at that
+  // moment the two are equal by construction.
+  const bmBase=benchSeries().base;
+  const bmNav=spx?(bmBase?bmBase.nav*spx/bmBase.spx:nav):null;
+  if(spx&&bmNav&&Number.isFinite(bmNavIn)&&bmNavIn>0&&Math.abs(bmNavIn/bmNav-1)>0.02)
+    spxNote=(spxNote?spxNote+' ':'')+`Model reported an index NAV of ${money(bmNavIn)} against the ${money(bmNav)} the ledger computes from the levels on record — a ${sgn((bmNavIn/bmNav-1)*100,0)}% disagreement. The ledger's figure is the one drawn; check its sp500_nav_basis to see which number it fumbled.`;
+
   const bench=(Array.isArray(o.bench)?o.bench:[]).filter(b=>b&&b.keep!==false)
     .map(b=>tk(b.ticker)).filter(t=>okTicker(t)&&!nh[t]).slice(0,S.cfg.bench);
 
@@ -857,7 +932,9 @@ function record(){
     actions:Array.isArray(o.basket_actions)?o.basket_actions:[],
     nav, cash, holdings:JSON.parse(JSON.stringify(nh)), bench,
     bench_in:bench, evidence:String(o.evidence_notes||'').slice(0,2000),
-    spx:num((o.benchmark_accounting||{}).sp500_price_index_level,NaN)};
+    spx, spxDate, spxNote, bmNav,
+    bmNavIn:(Number.isFinite(bmNavIn)&&bmNavIn>0)?bmNavIn:null,
+    bmNavBasis:String(bmk.sp500_nav_basis||'').slice(0,240)};
 
   ghostsFor(run);
   S.holdings=nh; S.cash=cash; S.bench=bench;
@@ -868,7 +945,8 @@ function record(){
   const a=adjudicate(run);
   const problems=a.flags.length;
   msg.innerHTML='<div class="msg '+(problems?'warn':'go')+'"><b>Run '+S.runs.length+' recorded.</b><span class="why">'+
-    (problems?a.flags.join(' · '):'Seal held. Scores computed from the rubric.')+'</span></div>';
+    (problems?a.flags.join(' · '):'Seal held. Scores computed from the rubric.')+
+    (spxNote?' · '+esc(spxNote):'')+'</span></div>';
   toast('Run '+S.runs.length+' recorded');
 }
 
@@ -993,6 +1071,11 @@ function renderKPIs(){
   $('#hd-q').textContent=Number.isFinite(avg)?avg.toFixed(1):'—';
   $('#hd-cash').textContent=run?run.cashScore.toFixed(0):'—';
   $('#hd-run').textContent=String(S.runs.length);
+  // the benchmark readout is opt-in, because a number you see on every screen
+  // is a number that starts making decisions for you
+  const on=S.cfg.headerBench===true;
+  $('#hd-bm-wrap').style.display=on?'':'none';
+  if(on){const L=benchSeries().last;$('#hd-bm').textContent=L?sgn(L.spread)+' pts':'—';}
 }
 
 function renderAdjudication(){
@@ -1098,41 +1181,182 @@ function renderPlan(){
 }
 function renderLedger(){
   $('#runs-table').innerHTML=S.runs.length?`<table><thead><tr><th>Date</th><th>Decision</th><th>Model</th>
-    <th class="num">NAV</th><th class="num">Mean Q</th><th>Seal</th><th>Reason</th></tr></thead><tbody>`+
-    S.runs.slice().reverse().map(r=>{const q=Object.keys(r.holdings).filter(t=>r.scores[t]).map(t=>r.scores[t].composite);
+    <th class="num">NAV</th><th class="num">S&amp;P</th><th class="num">Mean Q</th><th>Seal</th><th>Reason</th></tr></thead><tbody>`+
+    S.runs.map((r,i)=>({r,i})).reverse().map(({r,i})=>{const q=Object.keys(r.holdings).filter(t=>r.scores[t]).map(t=>r.scores[t].composite);
       const avg=q.length?(q.reduce((a,b)=>a+b,0)/q.length).toFixed(1):'—';
+      const lv=spxOf(r);
       return `<tr><td class="tick">${esc(r.date)}</td>
         <td><span class="chip ${r.decision==='HOLD'?'g':'j'}">${esc(r.decision)}</span></td>
         <td style="color:var(--mute);font-size:.78rem">${esc(r.model)}</td>
-        <td class="num">${money(r.nav)}</td><td class="num">${avg}</td>
+        <td class="num">${money(r.nav)}</td>
+        <td class="num" ${lv?'':'style="color:var(--judged)"'}>${lv?lv.toFixed(0):'missing'}</td>
+        <td class="num">${avg}</td>
         <td>${r.orderOK?'<span class="chip m">order ok</span>':'<span class="chip f">out of order</span>'}${
           r.sealState==='verified'?'<span class="chip g">nonce ok</span>':r.sealState==='declined'?'<span class="chip">no history</span>':r.sealState==='not_opened'?'<span class="chip j">unopened</span>':r.sealState==='n/a'?'':'<span class="chip f">'+esc(r.sealState)+'</span>'}${
           r.revised.length?'<span class="chip j">revised</span>':''}</td>
         <td style="color:var(--mute);font-size:.78rem">${esc(r.reason.slice(0,180))}${r.reason.length>180?'…':''}</td></tr>`;}).join('')+'</tbody></table>'
     :'<p class="empty">No runs yet.</p>';
-  renderNav();
+  renderBenchmark();
 }
-function renderNav(){
-  const host=$('#navchart'),pts=S.runs.filter(r=>Number.isFinite(r.nav));
-  if(pts.length<2){host.innerHTML='<p class="empty">Two runs needed.</p>';return;}
-  const base=pts[0], bl=Number.isFinite(base.spx)?base.spx:null;
-  const nav=pts.map(r=>r.nav);
-  const bm=pts.map(r=>(bl&&Number.isFinite(r.spx))?base.nav*(r.spx/bl):NaN);
-  const all=nav.concat(bm.filter(Number.isFinite));
-  let lo=Math.min(...all),hi=Math.max(...all);if(hi===lo){hi+=1;lo-=1;}
-  const pad=(hi-lo)*.12;lo-=pad;hi+=pad;
-  const W=760,H=230,L=68,R=14,T=14,B=26;
-  const x=i=>L+i/(pts.length-1)*(W-L-R), y=v=>T+(1-(v-lo)/(hi-lo))*(H-T-B);
-  let g='';
-  for(let k=0;k<=4;k++){const yy=T+k/4*(H-T-B);
-    g+=`<line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}" stroke="#263241"/>`;
-    g+=`<text x="8" y="${yy+3.5}" fill="#5b6b7a" font-size="10" font-family="ui-monospace,monospace">${Math.round(hi-k/4*(hi-lo)).toLocaleString()}</text>`;}
-  const path=v=>v.map((p,i)=>Number.isFinite(p)?`${i&&Number.isFinite(v[i-1])?'L':'M'}${x(i).toFixed(1)} ${y(p).toFixed(1)}`:'').join(' ');
-  if(bm.some(Number.isFinite))g+=`<path d="${path(bm)}" fill="none" stroke="#7fa8b8" stroke-width="1.5" opacity=".65"/>`;
-  g+=`<path d="${path(nav)}" fill="none" stroke="#4fd1c5" stroke-width="2"/>`;
-  g+=`<text x="${L}" y="${H-6}" fill="#5b6b7a" font-size="10" font-family="ui-monospace,monospace">${esc(pts[0].date)}</text>`;
-  g+=`<text x="${W-R}" y="${H-6}" fill="#5b6b7a" font-size="10" font-family="ui-monospace,monospace" text-anchor="end">${esc(pts[pts.length-1].date)}</text>`;
-  host.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="NAV against index">${g}</svg>`;
+
+/* ══════════════════ 10b · THE BENCHMARK ══════════════════
+   Both series are rebased to 100 at the first run that carries an index
+   level, so the axis reads in percent and the only quantity on the chart is
+   the distance between the two lines. The index is bookkeeping: recorded,
+   drawn, and structurally unable to reach the rule engine.                */
+function benchSeries(){
+  const all=S.runs.map((r,i)=>({i,date:r.date,nav:num(r.nav,NaN),spx:spxOf(r)}))
+                  .filter(p=>Number.isFinite(p.nav)&&p.nav>0);
+  const base=all.find(p=>p.spx)||null;
+  const pts=all.slice(base?all.indexOf(base):0).map(p=>({...p}));
+  const b0=base||pts[0]||null;
+  pts.forEach(p=>{
+    p.navIdx=b0?100*p.nav/b0.nav:NaN;
+    p.bmIdx=(base&&p.spx)?100*p.spx/base.spx:NaN;
+    p.spread=(Number.isFinite(p.navIdx)&&Number.isFinite(p.bmIdx))?p.navIdx-p.bmIdx:NaN;
+    // what the basket's capital at the baseline would be worth in the index today
+    p.bmNav=(base&&p.spx)?base.nav*p.spx/base.spx:NaN;
+  });
+  const paired=pts.filter(p=>Number.isFinite(p.bmIdx));
+  const d0=pts.length?dayOf(pts[0].date):null, d1=pts.length?dayOf(pts[pts.length-1].date):null;
+  return {pts, base, paired,
+    last:paired.length?paired[paired.length-1]:null,
+    holes:all.filter(p=>!p.spx),
+    days:(d0&&d1)?Math.round((d1-d0)/864e5):0};
+}
+
+function renderBenchmark(){
+  const B=benchSeries(), host=$('#navchart'), sp=$('#spreadchart'), msg=$('#bm-msg');
+  const cell=(k,v,s,c)=>`<div class="kpi"><div class="k">${k}</div><div class="v" ${c?`style="color:${c}"`:''}>${v}</div><div class="s">${s||''}</div></div>`;
+  const L=B.last, nav=navOf(S.holdings,S.cash);
+  // the basket's own line does not need the index to exist; only the spread does
+  const tail=B.pts.length?B.pts[B.pts.length-1]:null;
+  const navRet=tail?tail.navIdx-100:NaN, bmRet=L?L.bmIdx-100:NaN, spread=L?L.spread:NaN;
+  const upDown=x=>x>=0?'var(--go)':'var(--fire)';
+  // the same capital in the index, in dollars, from the most recent level on record
+  const idxNav=(tail&&Number.isFinite(tail.bmNav))?tail.bmNav:(L?L.bmNav:NaN);
+
+  $('#bm-kpis').innerHTML=[
+    cell('NAV now',money(nav),B.base?'from '+money(B.base.nav)+' on '+B.base.date:'no index level on record'),
+    cell('Index NAV',Number.isFinite(idxNav)?money(idxNav):'—',
+      B.base?((tail&&Number.isFinite(tail.bmNav))?'same capital in the index':'last level on record'):'awaiting a level'),
+    cell('Basket',Number.isFinite(navRet)?sgn(navRet)+'%':'—',B.base?'rebased to 100':'NAV only, no index yet',
+      Number.isFinite(navRet)?upDown(navRet):null),
+    cell('S&P 500',Number.isFinite(bmRet)?sgn(bmRet)+'%':'—',
+      (B.base&&L)?B.base.spx.toFixed(0)+' → '+L.spx.toFixed(0):'awaiting a level',
+      Number.isFinite(bmRet)?upDown(bmRet):null),
+    cell('Spread',Number.isFinite(spread)?sgn(spread):'—','basket minus index, in pts',
+      Number.isFinite(spread)?(spread>=0?'var(--go)':'var(--judged)'):null),
+    cell('Window',B.days?B.days+' d':'—',B.pts.length+' run'+(B.pts.length===1?'':'s')+' on the chart'),
+    cell('Gaps',String(B.holes.length),'runs with no level',B.holes.length?'var(--judged)':null)
+  ].join('');
+  $('#bm-tag').textContent=L?B.base.date+' → '+L.date:(S.runs.length?'no index levels yet':'no runs yet');
+
+  // ── the message line, which is where the honest caveat lives
+  let m='';
+  if(!S.runs.length)m='';
+  else if(!B.base)m=`<div class="msg warn"><b>No index level on record.</b><span class="why">The basket line can be drawn from NAV alone, but there is nothing to draw it against. The prompt now asks the model for benchmark_accounting.sp500_price_index_level every run; for runs already recorded, open the panel below and type the close.</span></div>`;
+  else if(B.pts.length<2)m=`<div class="msg"><b>One run charted.</b><span class="why">Basket and index both start at 100 on ${B.base.date}. A second run gives the first segment of line.</span></div>`;
+  else if(B.pts.length<4)m=`<div class="msg warn"><b>${B.pts.length} runs is not a result.</b><span class="why">At this sample size the spread is noise with a sign. It is recorded because it has to be recorded eventually, not because it means anything yet.</span></div>`;
+  else if(B.holes.length)m=`<div class="msg warn"><b>${B.holes.length} run${B.holes.length===1?'':'s'} carr${B.holes.length===1?'ies':'y'} no index level.</b><span class="why">The index line is drawn straight through ${B.holes.length===1?'that gap':'those gaps'}. Backfill below to make it honest.</span></div>`;
+  const lr=lastRun();
+  if(lr&&lr.spxNote)m+=`<div class="msg warn"><b>Benchmark note from the last run.</b><span class="why">${esc(lr.spxNote)}</span></div>`;
+  msg.innerHTML=m;
+
+  // ── main chart: two lines, one axis, everything else stripped out
+  if(B.pts.length<2){
+    host.innerHTML='<p class="empty">'+(S.runs.length?'Two runs are needed before there is a line to draw.':'The chart draws once runs are recorded. Both lines start at 100 on the first run that carries an S&amp;P level.')+'</p>';
+    sp.innerHTML='';
+  } else {
+    const P=B.pts, n=P.length;
+    const vals=P.map(p=>p.navIdx).concat(P.map(p=>p.bmIdx)).filter(Number.isFinite).concat([100]);
+    let lo=Math.min(...vals), hi=Math.max(...vals);
+    if(hi-lo<4){const mid=(hi+lo)/2;lo=mid-2;hi=mid+2;}
+    const pad=(hi-lo)*.14; lo-=pad; hi+=pad;
+    const W=760,H=264,LM=56,RM=104,TM=16,BM=26;
+    const x=i=>LM+(n>1?i/(n-1):.5)*(W-LM-RM), y=v=>TM+(1-(v-lo)/(hi-lo))*(H-TM-BM);
+    let g='';
+    for(let k=0;k<=4;k++){const v=hi-k/4*(hi-lo), yy=y(v);
+      g+=`<line x1="${LM}" y1="${yy.toFixed(1)}" x2="${W-RM}" y2="${yy.toFixed(1)}" stroke="#263241"/>`;
+      g+=`<text x="${LM-8}" y="${(yy+3.5).toFixed(1)}" fill="#5b6b7a" font-size="10" font-family="ui-monospace,monospace" text-anchor="end">${sgn(v-100)}%</text>`;}
+    g+=`<line x1="${LM}" y1="${y(100).toFixed(1)}" x2="${W-RM}" y2="${y(100).toFixed(1)}" stroke="#334255" stroke-width="1" stroke-dasharray="2 4"/>`;
+    const path=arr=>arr.map((v,i)=>Number.isFinite(v)
+      ?`${(i&&Number.isFinite(arr[i-1]))?'L':'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`:'').join(' ');
+    const navArr=P.map(p=>p.navIdx), bmArr=P.map(p=>p.bmIdx);
+    if(bmArr.some(Number.isFinite)){
+      // A run recorded without a level leaves a hole. The shape is bridged so the
+      // line stays readable, and the bridge is drawn thin and faint so you can see
+      // it is inferred rather than measured.
+      let prevI=-1;
+      bmArr.forEach((v,i)=>{if(!Number.isFinite(v))return;
+        if(prevI>=0&&i-prevI>1)
+          g+=`<path d="M${x(prevI).toFixed(1)} ${y(bmArr[prevI]).toFixed(1)} L${x(i).toFixed(1)} ${y(v).toFixed(1)}" fill="none" stroke="#7fa8b8" stroke-width="1.1" stroke-dasharray="1 5" opacity=".45"/>`;
+        prevI=i;});
+      g+=`<path d="${path(bmArr)}" fill="none" stroke="#7fa8b8" stroke-width="1.7" stroke-dasharray="5 4" opacity=".9"/>`;
+    }
+    g+=`<path d="${path(navArr)}" fill="none" stroke="#4fd1c5" stroke-width="2.2"/>`;
+    P.forEach((p,i)=>{
+      if(Number.isFinite(p.bmIdx))g+=`<circle cx="${x(i).toFixed(1)}" cy="${y(p.bmIdx).toFixed(1)}" r="2.5" fill="#0b0f14" stroke="#7fa8b8" stroke-width="1.2"/>`;
+      g+=`<circle cx="${x(i).toFixed(1)}" cy="${y(p.navIdx).toFixed(1)}" r="3.1" fill="#4fd1c5"/>`;});
+    // endpoint labels, nudged apart when the two lines finish on top of each other
+    const li=(()=>{for(let i=n-1;i>=0;i--)if(Number.isFinite(P[i].bmIdx))return i;return -1;})();
+    let yN=y(P[n-1].navIdx), yB=li>=0?y(P[li].bmIdx):null;
+    if(yB!=null&&Math.abs(yN-yB)<13){const mid=(yN+yB)/2, navUp=yN<=yB;
+      yN=navUp?mid-7:mid+7; yB=navUp?mid+7:mid-7;}
+    g+=`<text x="${W-RM+10}" y="${(yN+3.5).toFixed(1)}" fill="#4fd1c5" font-size="10.5" font-family="ui-monospace,monospace" font-weight="600">BASKET ${sgn(P[n-1].navIdx-100)}%</text>`;
+    if(yB!=null)g+=`<text x="${W-RM+10}" y="${(yB+3.5).toFixed(1)}" fill="#7fa8b8" font-size="10.5" font-family="ui-monospace,monospace">S&amp;P ${sgn(P[li].bmIdx-100)}%</text>`;
+    g+=`<text x="${LM}" y="${H-6}" fill="#5b6b7a" font-size="10" font-family="ui-monospace,monospace">${esc(P[0].date)}</text>`;
+    g+=`<text x="${W-RM}" y="${H-6}" fill="#5b6b7a" font-size="10" font-family="ui-monospace,monospace" text-anchor="end">${esc(P[n-1].date)}</text>`;
+    host.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Basket NAV and the S and P 500, both rebased to 100 at inception">${g}</svg>`;
+
+    // ── the spread on its own axis, since that is the only number in the card
+    // The spread sits on the same x-axis as the chart above it, so the two panels
+    // can be read together rather than one being a differently-spaced rerun.
+    const SP=P.map((p,i)=>({i,v:p.spread})).filter(p=>Number.isFinite(p.v));
+    if(SP.length<2){sp.innerHTML='';}
+    else{
+      const mx=Math.max(1,...SP.map(p=>Math.abs(p.v)))*1.3;
+      const H2=118,T2=14,B2=22, W2=W, L2=LM, R2=RM;
+      const x2=i=>x(i);
+      const y2=v=>T2+(1-(v+mx)/(2*mx))*(H2-T2-B2);
+      const zy=y2(0);
+      const seg=SP.map((p,k)=>`${k?'L':'M'}${x2(p.i).toFixed(1)} ${y2(p.v).toFixed(1)}`).join(' ');
+      const poly=`M${x2(SP[0].i).toFixed(1)} ${zy.toFixed(1)} `+
+        SP.map(p=>`L${x2(p.i).toFixed(1)} ${y2(p.v).toFixed(1)}`).join(' ')+
+        ` L${x2(SP[SP.length-1].i).toFixed(1)} ${zy.toFixed(1)} Z`;
+      let h=`<defs><clipPath id="bmAbove"><rect x="0" y="0" width="${W2}" height="${zy.toFixed(1)}"/></clipPath>`+
+            `<clipPath id="bmBelow"><rect x="0" y="${zy.toFixed(1)}" width="${W2}" height="${(H2-zy).toFixed(1)}"/></clipPath></defs>`;
+      h+=`<path d="${poly}" fill="#5ec27a" opacity=".17" clip-path="url(#bmAbove)"/>`;
+      h+=`<path d="${poly}" fill="#d9a441" opacity=".17" clip-path="url(#bmBelow)"/>`;
+      h+=`<line x1="${L2}" y1="${zy.toFixed(1)}" x2="${W2-R2}" y2="${zy.toFixed(1)}" stroke="#334255"/>`;
+      h+=`<path d="${seg}" fill="none" stroke="#e6edf3" stroke-width="1.6" opacity=".85"/>`;
+      [[mx*.8,'+'],[0,''],[-mx*.8,'']].forEach(([v])=>{
+        h+=`<text x="${L2-8}" y="${(y2(v)+3.5).toFixed(1)}" fill="#5b6b7a" font-size="9.5" font-family="ui-monospace,monospace" text-anchor="end">${v?sgn(v):'0'}</text>`;});
+      const sv=SP[SP.length-1].v;
+      h+=`<text x="${W2-R2+10}" y="${(y2(sv)+3.5).toFixed(1)}" fill="${sv>=0?'#5ec27a':'#d9a441'}" font-size="10.5" font-family="ui-monospace,monospace" font-weight="600">SPREAD ${sgn(sv)}</text>`;
+      h+=`<text x="${L2}" y="${H2-4}" fill="#5b6b7a" font-size="9.5" font-family="ui-monospace,monospace">spread, index points${B.holes.length?' · '+B.holes.length+' missing level(s), drawn straight through':''}</text>`;
+      sp.innerHTML=`<svg viewBox="0 0 ${W2} ${H2}" role="img" aria-label="Spread between the basket and the index">${h}</svg>`;
+    }
+  }
+
+  // ── levels on record, editable, because a hole in bookkeeping is fixable by hand
+  const bn={}; B.pts.forEach(p=>{if(Number.isFinite(p.bmNav))bn[p.i]=p.bmNav;});
+  $('#bm-levels').innerHTML=S.runs.length?`<table><thead><tr><th>Run</th><th>Date</th><th class="num">NAV</th>
+    <th class="num">Index NAV</th><th>Read on</th><th class="num">S&amp;P 500 level</th></tr></thead><tbody>`+
+    S.runs.map((r,i)=>{const lv=spxOf(r), off=r.bmNavIn&&bn[i]&&Math.abs(r.bmNavIn/bn[i]-1)>0.02;
+      return `<tr><td class="tick" style="color:var(--dim)">${i+1}</td><td class="tick">${esc(r.date)}</td>
+        <td class="num">${money(r.nav)}</td>
+        <td class="num" style="color:var(--mid)">${bn[i]!=null?money(bn[i]):'—'}${off?' <span class="chip j">model said '+money(r.bmNavIn)+'</span>':''}</td>
+        <td style="color:var(--dim);font-size:.78rem">${esc(r.spxDate||r.date)}${lv?'':' <span class="chip j">gap</span>'}</td>
+        <td class="num"><input class="spxin" type="number" step="0.01" min="0" data-spx="${i}" value="${lv==null?'':lv}" placeholder="level"></td></tr>`;}).join('')+
+    '</tbody></table>':'<p class="empty">No runs yet.</p>';
+  $$('#bm-levels [data-spx]').forEach(el=>el.onchange=()=>{
+    const i=+el.dataset.spx, v=Number(el.value);
+    S.runs[i].spx=(Number.isFinite(v)&&v>0)?v:null;
+    S.runs[i].spxNote='';
+    save();renderAll();toast('Index level set for run '+(i+1));});
+
+  $('#cfg-headerbm').checked=S.cfg.headerBench===true;
 }
 
 function renderTriggers(){
@@ -1168,7 +1392,8 @@ function renderRubric(){
     `. A pillar whose note cites a filed number is E3 at worst — over-classing to E5 widens every bar until nothing can separate from anything, which looks like humility and behaves like paralysis. The interval blends the weighted-linear and root-sum-square aggregates 60/40, and widens 25% when three or more pillars fall to E4 or worse — because pillar errors are correlated, not independent.</p>`+
     `<p class="note"><b style="color:var(--paper)">Degradation costs points.</b> When a pillar's evidence class falls, its score should fall too, not merely widen. Otherwise a company that becomes harder to analyse gets defended by its own opacity.</p>`+
     `<p class="note"><b style="color:var(--paper)">Separation, not overlap.</b> A trade needs the quality gap to beat <code>&radic;(bar<sub>a</sub>&sup2;+bar<sub>b</sub>&sup2;)</code>. Testing showed the intuitive &ldquo;bars must not overlap&rdquo; rule demands a 7.6 pt gap between two well-documented names and would freeze the basket permanently &mdash; the same absorbing state this design exists to break, dressed in arithmetic.</p>`+
-    `<p class="note"><b style="color:var(--paper)">Cash</b> scores <code>50 + 5 × short rate</code>, capped at 85, with a ±2 bar because the short rate is an E1 figure. A narrow bar makes cash hard for a hazy candidate to displace.</p>`;
+    `<p class="note"><b style="color:var(--paper)">Cash</b> scores <code>50 + 5 × short rate</code>, capped at 85, with a ±2 bar because the short rate is an E1 figure. A narrow bar makes cash hard for a hazy candidate to displace.</p>`+
+    `<p class="note"><b style="color:var(--paper)">The S&amp;P 500 is not in the rubric.</b> It is recorded once per run, charted under Ledger &amp; S&amp;P, and read by nothing. The model is told to report the level and told in the same breath that it must play no part in any judgement; the app never passes it to the rule engine, so relative return cannot leak into a promotion, a floor or a weight.</p>`;
 }
 function renderAll(){renderLadder();renderKPIs();renderAdjudication();renderPlan();renderBasket();renderLedger();renderTriggers();renderRubric();writeCfg();}
 
@@ -1183,12 +1408,14 @@ function readCfg(){S.cfg.max=clamp(num($('#cfg-max').value,15),8,20);S.cfg.bench
   S.cfg.benchRotate=clamp(num($('#cfg-rotate').value,1),0,5);
   S.cfg.tierSpread=clamp(num($('#cfg-spread').value,0.3),0,0.6);
   S.cfg.valTilt=clamp(num($('#cfg-valtilt').value,150),0,400);
+  S.cfg.headerBench=$('#cfg-headerbm')?$('#cfg-headerbm').checked===true:false;
   S.news=$('#news').value;}
 function writeCfg(){$('#cfg-max').value=S.cfg.max;$('#cfg-bench').value=S.cfg.bench;$('#cfg-tenure').value=S.cfg.tenure;
   $('#cfg-oppcap').value=S.cfg.oppcap;$('#cfg-ceiling').value=S.cfg.ceiling;$('#cfg-margin').value=S.cfg.margin;
   $('#cfg-opacity').value=S.cfg.opacity;$('#cfg-initial').value=S.cfg.initial;
   $('#cfg-cash').value=S.cfg.startCash;$('#cfg-stale').value=S.cfg.stale;
   $('#cfg-rotate').value=S.cfg.benchRotate;$('#cfg-spread').value=S.cfg.tierSpread;$('#cfg-valtilt').value=S.cfg.valTilt;
+  $('#cfg-headerbm').checked=S.cfg.headerBench===true;
   if($('#news').value!==S.news)$('#news').value=S.news;}
 
 function download(){readCfg();const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
@@ -1198,7 +1425,9 @@ function download(){readCfg();const b=new Blob([JSON.stringify(S,null,2)],{type:
 function restore(f){const r=new FileReader();
   r.onload=()=>{try{const o=JSON.parse(String(r.result));
     if(!o||!o.version)throw 0;
-    S=Object.assign(JSON.parse(JSON.stringify(BLANK)),o);save();renderAll();toast('State restored');}
+    S=Object.assign(JSON.parse(JSON.stringify(BLANK)),o);
+    S.cfg=Object.assign(JSON.parse(JSON.stringify(BLANK.cfg)),o.cfg||{});
+    save();renderAll();toast('State restored');}
     catch(e){toast('That file is not a Prymis IV state export.',true);}};
   r.readAsText(f);}
 function seed(f){const r=new FileReader();
@@ -1242,6 +1471,8 @@ $('#seed-file').onchange=e=>{if(e.target.files[0])seed(e.target.files[0]);e.targ
 $('#btn-reset').onclick=()=>{if(!confirm('Clear everything? Download the state first if you want to keep it.'))return;
   S=JSON.parse(JSON.stringify(BLANK));save();renderAll();toast('Reset');};
 $('#news').oninput=()=>{S.news=$('#news').value;save();};
+$('#cfg-headerbm').onchange=()=>{S.cfg.headerBench=$('#cfg-headerbm').checked===true;save();renderKPIs();
+  toast(S.cfg.headerBench?'Spread now shows in the header':'Spread hidden again');};
 ['cfg-max','cfg-bench','cfg-tenure','cfg-oppcap','cfg-ceiling','cfg-margin','cfg-opacity','cfg-initial','cfg-cash','cfg-stale','cfg-rotate','cfg-spread','cfg-valtilt'].forEach(id=>
   $('#'+id).onchange=()=>{readCfg();save();renderAll();toast('Rules updated');});
 
