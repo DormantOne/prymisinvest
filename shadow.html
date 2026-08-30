@@ -1,0 +1,1253 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Prymis IV — Quality Instrument</title>
+<style>
+:root{
+  --ink:#0b0f14; --slate:#131a22; --slate2:#1b242e; --rule:#263241; --rule2:#334255;
+  --measured:#4fd1c5;   /* evidence-backed: E1/E2 */
+  --mid:#7fa8b8;        /* E3 */
+  --judged:#d9a441;     /* judgment-heavy: E4/E5/E6 */
+  --paper:#e6edf3; --mute:#7c8b9a; --dim:#5b6b7a;
+  --fire:#e05a47; --go:#5ec27a;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--ink);color:var(--paper);font-family:var(--sans);line-height:1.55;font-size:15px}
+
+/* ---- instrument label: the recurring structural device ---- */
+.eyebrow{font-family:var(--mono);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+
+header{position:sticky;top:0;z-index:60;background:rgba(11,15,20,.94);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--rule);padding:14px 20px;display:flex;gap:18px;align-items:baseline;flex-wrap:wrap}
+header h1{font-family:var(--mono);font-size:1.05rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+header h1 span{color:var(--measured)}
+header .tagline{font-size:.82rem;color:var(--mute);flex:1;min-width:200px}
+.readout{font-family:var(--mono);font-size:.78rem;color:var(--mute);white-space:nowrap}
+.readout b{color:var(--paper);font-weight:600}
+
+nav{display:flex;gap:2px;padding:0 20px;border-bottom:1px solid var(--rule);background:var(--ink);
+  position:sticky;top:57px;z-index:55;overflow-x:auto}
+nav button{font-family:var(--mono);font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;
+  background:none;border:0;border-bottom:2px solid transparent;color:var(--dim);padding:12px 14px;cursor:pointer;white-space:nowrap}
+nav button:hover{color:var(--paper)}
+nav button[aria-selected="true"]{color:var(--measured);border-bottom-color:var(--measured)}
+
+main{max-width:1560px;margin:0 auto;padding:20px}
+.cols{display:grid;grid-template-columns:1.15fr .85fr;gap:20px;align-items:start}
+@media(max-width:1080px){.cols{grid-template-columns:1fr}}
+.view{display:none}.view.on{display:block}
+
+.card{background:var(--slate);border:1px solid var(--rule);border-radius:4px;margin-bottom:18px}
+.card > h2{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);
+  padding:11px 16px;border-bottom:1px solid var(--rule);font-weight:500;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.card .body{padding:16px}
+.card .body > * + *{margin-top:12px}
+
+p.note{font-size:.85rem;color:var(--mute)}
+p.note code{font-family:var(--mono);font-size:.8rem;color:var(--mid)}
+a{color:var(--measured)}
+
+button.act{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
+  border:1px solid var(--rule2);background:var(--slate2);color:var(--paper);padding:9px 14px;border-radius:3px;cursor:pointer}
+button.act:hover{border-color:var(--measured);color:var(--measured)}
+button.act.primary{background:var(--measured);border-color:var(--measured);color:#06231f;font-weight:700}
+button.act.primary:hover{background:#66e0d4;color:#06231f}
+button.act.warn:hover{border-color:var(--fire);color:var(--fire)}
+button.act:disabled{opacity:.4;cursor:not-allowed}
+button.act:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible,nav button:focus-visible{
+  outline:2px solid var(--measured);outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+textarea,input,select{width:100%;background:var(--ink);border:1px solid var(--rule);border-radius:3px;
+  color:var(--paper);padding:10px;font-family:var(--mono);font-size:.82rem}
+textarea{resize:vertical;min-height:120px;line-height:1.5}
+textarea.tall{min-height:300px}
+label.field{display:block}
+label.field span{display:block;font-family:var(--mono);font-size:.66rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--mute);margin-bottom:5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.grid2{grid-template-columns:1fr}}
+
+pre.out{background:var(--ink);border:1px solid var(--rule);border-radius:3px;padding:14px;
+  font-family:var(--mono);font-size:.74rem;line-height:1.5;color:var(--mute);
+  max-height:520px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{font-family:var(--mono);font-size:.64rem;letter-spacing:.13em;text-transform:uppercase;color:var(--mute);
+  text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);font-weight:500}
+td{padding:9px 10px;border-bottom:1px solid rgba(38,50,65,.55);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tick{font-family:var(--mono);font-weight:600;letter-spacing:.03em}
+
+.chip{display:inline-block;font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;
+  padding:2px 7px;border-radius:2px;border:1px solid var(--rule2);color:var(--mute);white-space:nowrap}
+.chip.m{border-color:rgba(79,209,197,.5);color:var(--measured)}
+.chip.j{border-color:rgba(217,164,65,.5);color:var(--judged)}
+.chip.f{border-color:rgba(224,90,71,.6);color:var(--fire)}
+.chip.g{border-color:rgba(94,194,122,.5);color:var(--go)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:1px;background:var(--rule)}
+.kpi{background:var(--slate);padding:12px 14px}
+.kpi .k{font-family:var(--mono);font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;color:var(--dim)}
+.kpi .v{font-family:var(--mono);font-size:1.22rem;font-weight:600;margin-top:3px;font-variant-numeric:tabular-nums}
+.kpi .s{font-family:var(--mono);font-size:.66rem;color:var(--mute);margin-top:2px}
+
+.msg{border-left:2px solid var(--rule2);padding:9px 12px;font-size:.84rem;color:var(--mute);background:rgba(27,36,46,.5)}
+.msg.go{border-left-color:var(--go)} .msg.warn{border-left-color:var(--judged)} .msg.stop{border-left-color:var(--fire)}
+.msg b{color:var(--paper);font-weight:600}
+.msg .why{display:block;margin-top:3px;font-family:var(--mono);font-size:.72rem;color:var(--dim)}
+
+.empty{font-size:.85rem;color:var(--dim);font-style:italic;padding:6px 0}
+details{border:1px solid var(--rule);border-radius:3px;background:var(--ink)}
+details > summary{cursor:pointer;padding:9px 12px;font-family:var(--mono);font-size:.72rem;
+  letter-spacing:.08em;color:var(--mute);list-style:none}
+details > summary::-webkit-details-marker{display:none}
+details > summary::before{content:"▸ ";color:var(--dim)}
+details[open] > summary::before{content:"▾ "}
+details > summary:hover{color:var(--paper)}
+details .inner{padding:0 12px 12px}
+
+#toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,26px);opacity:0;pointer-events:none;
+  background:var(--slate2);border:1px solid var(--rule2);border-left:3px solid var(--measured);
+  color:var(--paper);font-family:var(--mono);font-size:.76rem;padding:11px 16px;border-radius:3px;z-index:99;
+  transition:opacity .18s,transform .18s;max-width:90vw}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+#toast.bad{border-left-color:var(--fire)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:.66rem;color:var(--dim);margin-top:10px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Prymis <span>IV</span></h1>
+  <div class="tagline">Blind-scored quality, with error bars. Nothing moves unless the bars separate.</div>
+  <div class="readout">NAV <b id="hd-nav">—</b> · Q <b id="hd-q">—</b> · Cash bar <b id="hd-cash">—</b> · Run <b id="hd-run">0</b></div>
+</header>
+
+<nav role="tablist">
+  <button role="tab" aria-selected="true" data-view="run">Run</button>
+  <button role="tab" aria-selected="false" data-view="basket">Basket &amp; Bench</button>
+  <button role="tab" aria-selected="false" data-view="ledger">Ledger</button>
+  <button role="tab" aria-selected="false" data-view="triggers">Triggers &amp; Ghosts</button>
+  <button role="tab" aria-selected="false" data-view="data">Rubric &amp; Data</button>
+</nav>
+
+<main>
+
+<!-- ═══════════════ RUN ═══════════════ -->
+<section class="view on" data-view="run">
+  <div class="card">
+    <h2><span>Quality ladder — the only chart that decides anything</span><span class="eyebrow" id="ladder-date">no runs yet</span></h2>
+    <div class="body">
+      <div id="ladder"></div>
+      <div class="legend">
+        <span><i style="background:var(--measured)"></i>evidence-backed score</span>
+        <span><i style="background:var(--judged)"></i>judgment-heavy score</span>
+        <span><i style="background:var(--paper)"></i>held</span>
+        <span><i style="background:transparent;border:1px solid var(--mute)"></i>bench</span>
+        <span>│ cash reservation level</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div>
+      <div class="card">
+        <h2>Adjudication — what the rules say</h2>
+        <div class="body" id="adjudication"><p class="empty">Record a run to see rule output.</p></div>
+      </div>
+
+      <div class="card">
+        <h2><span>Movement plan</span><span class="eyebrow" id="plan-tag">—</span></h2>
+        <div class="body" id="plan"><p class="empty">Record a run to see the plan.</p></div>
+      </div>
+
+      <div class="card">
+        <h2>Position</h2>
+        <div class="body"><div class="kpis" id="kpis"></div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2><span>1 · Build the prompt</span><span class="eyebrow" id="shuffle-tag">—</span></h2>
+        <div class="body">
+          <p class="note">Candidates are shuffled and stripped of held/bench status. History is sealed into a base64 block the model is told to open only after it has emitted its blind scores.</p>
+          <div class="row">
+            <button class="act primary" id="btn-gen">Build prompt</button>
+            <button class="act" id="btn-copy">Copy</button>
+            <button class="act" id="btn-add">Add a name</button>
+          </div>
+          <label class="field"><span>Events to triage (optional)</span>
+            <textarea id="news" placeholder="Filings, litigation, management changes, debt actions. Not price moves."></textarea></label>
+          <pre class="out" id="prompt-out">Press Build prompt.</pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span>Sealed history</span><span class="row" style="gap:8px"><span class="eyebrow" id="seal-nonce">no nonce</span><button class="act" id="btn-reveal" style="padding:4px 9px;font-size:.62rem">reveal</button></span></h2>
+        <div class="body">
+          <p class="note">This is what the model is handed instead of your history in plain sight. Base64 is not a cipher and the model can open it — that is the point, it needs the history for the final answer. What it changes is that the history arrives <b style="color:var(--paper)">inert</b>: a sealed envelope on the desk rather than an open page. Passive anchoring needs plain text; using this takes a deliberate act, which is also an auditable one.</p>
+          <pre class="out" id="seal-blob" style="max-height:150px">Build a prompt to seal the current history.</pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>2 · Record the reply</h2>
+        <div class="body">
+          <label class="field"><span>Paste the model's JSON</span>
+            <textarea id="paste" class="tall" placeholder="Paste the full reply. Fenced blocks are fine."></textarea></label>
+          <div class="row">
+            <button class="act primary" id="btn-record">Record run</button>
+            <button class="act" id="btn-schema">Copy schema</button>
+          </div>
+          <div id="parse-msg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ BASKET ═══════════════ -->
+<section class="view" data-view="basket">
+  <div class="card">
+    <h2><span>Held</span><span class="eyebrow" id="basket-count">—</span></h2>
+    <div class="body" id="basket-table"><p class="empty">No holdings yet.</p></div>
+  </div>
+  <div class="card">
+    <h2>Bench</h2>
+    <div class="body" id="bench-table"><p class="empty">No bench yet.</p></div>
+  </div>
+  <div class="card">
+    <h2>Pillar detail — latest blind pass</h2>
+    <div class="body" id="pillar-detail"><p class="empty">No scores yet.</p></div>
+  </div>
+</section>
+
+<!-- ═══════════════ LEDGER ═══════════════ -->
+<section class="view" data-view="ledger">
+  <div class="card">
+    <h2><span>Runs</span><span class="eyebrow">newest first</span></h2>
+    <div class="body" id="runs-table"><p class="empty">No runs yet.</p></div>
+  </div>
+  <div class="card">
+    <h2><span>NAV against the index</span><span class="eyebrow">bookkeeping — not an input, and not a result at this sample size</span></h2>
+    <div class="body">
+      <div id="navchart"></div>
+      <p class="note">Kept off the Run tab on purpose. Over a handful of runs this line carries no information about whether the process works, and reading it daily is the main channel by which benchmark awareness re-enters a system designed to exclude it.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ TRIGGERS ═══════════════ -->
+<section class="view" data-view="triggers">
+  <div class="card">
+    <h2><span>Trigger ledger</span><span class="eyebrow">restatements are the tell</span></h2>
+    <div class="body">
+      <p class="note">Every falsifier the model states becomes a tracked commitment. A trigger whose wording keeps changing is a trigger the system does not actually hold.</p>
+      <div id="trigger-table"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Ghost book</h2>
+    <div class="body">
+      <p class="note">Each swap and each opportunity increment is tracked against the counterfactual of having done nothing. This is the only clean read on whether the rules earn their keep.</p>
+      <div id="ghost-table"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ DATA ═══════════════ -->
+<section class="view" data-view="data">
+  <div class="cols">
+    <div>
+      <div class="card">
+        <h2>Rubric</h2>
+        <div class="body" id="rubric"></div>
+      </div>
+      <div class="card">
+        <h2>Rules in force</h2>
+        <div class="body">
+          <div class="grid2">
+            <label class="field"><span>Max holdings</span><input id="cfg-max" type="number" min="8" max="20" value="15"></label>
+            <label class="field"><span>Bench size</span><input id="cfg-bench" type="number" min="0" max="10" value="5"></label>
+            <label class="field"><span>Tenure protection (runs)</span><input id="cfg-tenure" type="number" min="0" max="20" value="3"></label>
+            <label class="field"><span>Opportunity cap (bps/run)</span><input id="cfg-oppcap" type="number" min="0" max="600" step="25" value="200"></label>
+            <label class="field"><span>Weight ceiling (× equal weight)</span><input id="cfg-ceiling" type="number" min="1" max="3" step="0.1" value="1.5"></label>
+            <label class="field"><span>Promotion margin (extra pts)</span><input id="cfg-margin" type="number" min="0" max="10" step="0.5" value="0"></label>
+            <label class="field"><span>Opacity limit (± pts)</span><input id="cfg-opacity" type="number" min="5" max="40" step="1" value="15"></label>
+            <label class="field"><span>Initial basket size</span><input id="cfg-initial" type="number" min="3" max="20" value="10"></label>
+            <label class="field"><span>Starting capital</span><input id="cfg-cash" type="number" min="100" step="500" value="10000"></label>
+            <label class="field"><span>Reject runs older than (days)</span><input id="cfg-stale" type="number" min="1" max="30" value="5"></label>
+            <label class="field"><span>Bench seats rotated per review</span><input id="cfg-rotate" type="number" min="0" max="5" value="1"></label>
+            <label class="field"><span>Band weight spread (±)</span><input id="cfg-spread" type="number" min="0" max="0.6" step="0.05" value="0.3"></label>
+            <label class="field"><span>Valuation tiebreak cap (bps)</span><input id="cfg-valtilt" type="number" min="0" max="400" step="25" value="150"></label>
+          </div>
+          <p class="note">Promotion requires the quality gap to exceed <code>√(bar_bench² + bar_held²)</code> plus the margin — separation measured on the difference, not two bars failing to overlap. The overlap version is the intuitive one and it is far too strict: it demands a 7.6 pt gap between two well-documented names, which against a basket clustered in the 80s and 90s would freeze the system permanently. Raise the margin above zero once you have scored the same set twice and measured your own noise floor.</p>
+          <p class="note"><b style="color:var(--paper)">Opacity limit.</b> Anything whose bar exceeds it is unholdable regardless of score. You do not own what you cannot measure, and without this backstop a company that becomes harder to analyse ends up defended by its own murk.</p>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h2>Seed from your existing ledger</h2>
+        <div class="body">
+          <p class="note">Load a Prymis v3 full-state or ledger export. Positions, prices and cash carry over. Scores do not — everything gets rescored blind on the first run, which is the point.</p>
+          <div class="row">
+            <button class="act" id="btn-seed">Load v3 ledger</button>
+            <input type="file" id="seed-file" accept=".json,application/json" style="display:none">
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Backup</h2>
+        <div class="body">
+          <p class="note">Browser storage is best-effort and may be unavailable. The downloaded file is the real archive.</p>
+          <div class="row">
+            <button class="act primary" id="btn-download">Download state</button>
+            <button class="act" id="btn-restore-open">Restore from file</button>
+            <input type="file" id="restore-file" accept=".json,application/json" style="display:none">
+            <button class="act warn" id="btn-reset">Reset</button>
+          </div>
+          <div class="msg" id="storage-msg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ══════════════════ 1 · RUBRIC ══════════════════ */
+const VERSION='prymis_iv_1_0';
+const PILLARS=[
+  {k:'balance_sheet',   n:'Balance-sheet safety',        w:20, anchor:'90+: survives a severe cycle with no external financing. 70-89: sound, one identifiable dependency. 50-69: refinancing or coverage exposure. <50: impaired.'},
+  {k:'fcf_durability',  n:'Free-cash-flow durability',   w:20, anchor:'90+: self-funds reinvestment through a full cycle. 70-89: durable but capex-sensitive. 50-69: conversion depends on favourable conditions. <50: not self-funding.'},
+  {k:'moat',            n:'Moat / revenue durability',   w:20, anchor:'90+: structural and widening. 70-89: strong with a credible threat. 50-69: contested. <50: eroding.'},
+  {k:'profitability',   n:'Profitability quality',       w:15, anchor:'90+: high returns earned structurally. 70-89: high but partly cyclical. 50-69: adequate. <50: weak or accounting-flattered.'},
+  {k:'necessity',       n:'Situation-independence',      w:10, anchor:'90+: demand persists regardless of conditions. 70-89: mostly required. 50-69: mixed. <50: discretionary or fad-driven.'},
+  {k:'capital_allocation',n:'Capital allocation & accounting',w:10, anchor:'90+: disciplined, clean, per-share aware. 70-89: sound with one open question. 50-69: uneven or opaque. <50: value-destroying.'},
+  {k:'governance',      n:'Governance & culture',        w:5,  anchor:'Weighted low because it is the least measurable, not the least important. Disqualifying conduct is a veto flag, not a deduction.'}
+];
+const EV={
+  E1:{hw:2, n:'a figure taken straight from an audited filing'},
+  E2:{hw:5, n:'filed figures needing normalisation or combination'},
+  E3:{hw:8, n:'management-reported or non-GAAP, OR a qualitative judgement anchored to specific filed metrics'},
+  E4:{hw:12,n:'third-party estimate, press, or industry data you cannot trace to a filing'},
+  E5:{hw:20,n:'qualitative inference with no quantitative anchor of any kind'},
+  E6:{hw:25,n:'not assessable'}};
+const VETOES=['accounting_fraud','material_restatement','disqualifying_governance','index_ineligible'];
+
+/* ══════════════════ 2 · STATE ══════════════════ */
+const BLANK={version:VERSION,created:new Date().toISOString(),
+  cfg:{max:15,bench:5,tenure:3,oppcap:200,ceiling:1.5,margin:0,opacity:15,startCash:10000,stale:5,initial:10,benchRotate:1,tierSpread:0.3,valTilt:150},
+  holdings:{},   // ticker -> {shares, price, sinceRun}
+  bench:[],      // tickers
+  cash:0, runs:[], triggers:{}, ghosts:[], news:'', slots:null, lastPrompt:'', nonce:''};
+let S=JSON.parse(JSON.stringify(BLANK));
+
+const K='prymis_iv_state';
+function save(){try{localStorage.setItem(K,JSON.stringify(S));setStorageMsg(true);}catch(e){setStorageMsg(false);}}
+function load(){try{const r=localStorage.getItem(K);if(r){const o=JSON.parse(r);if(o&&o.version)S=Object.assign(JSON.parse(JSON.stringify(BLANK)),o);}}catch(e){}}
+function setStorageMsg(ok){const el=$('#storage-msg');if(!el)return;
+  el.className='msg '+(ok?'go':'warn');
+  el.innerHTML=ok?'Saved to this browser. <span class="why">Download anyway — browser storage is wiped by cache clears and private windows.</span>'
+    :'Browser storage unavailable here. <span class="why">Everything still works in memory. Download the state file before you close the tab.</span>';}
+
+/* ══════════════════ 3 · HELPERS ══════════════════ */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const num=(x,d=0)=>{const n=Number(x);return Number.isFinite(n)?n:d;};
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=x=>Number.isFinite(x)?'$'+x.toLocaleString(undefined,{maximumFractionDigits:0}):'—';
+const pct=x=>Number.isFinite(x)?(x*100).toFixed(1)+'%':'—';
+const tk=t=>String(t||'').trim().toUpperCase().replace(/\s+/g,'');
+const okTicker=t=>/^[A-Z][A-Z0-9.\-]{0,11}$/.test(t)&&!/^TICKER/.test(t)&&!/^SLOT/.test(t);
+function toast(m,bad){const t=$('#toast');t.textContent=m;t.className='on'+(bad?' bad':'');setTimeout(()=>t.className='',3400);}
+function b64(s){return btoa(unescape(encodeURIComponent(s)));}
+function shuffle(a){const x=a.slice();for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];}return x;}
+function slotId(i){return 'S'+String(i+1).padStart(2,'0')+'-'+Math.random().toString(36).slice(2,5).toUpperCase();}
+
+/* ══════════════════ 4 · SCORING MATH ══════════════════
+   The app computes composite and interval. The model supplies only pillar
+   scores and evidence classes. That is what makes the rubric real rather
+   than a request politely ignored.                                        */
+function scoreOf(pillars){
+  let comp=0, lin=0, rss=0, backed=0, soft=0, missing=[];
+  PILLARS.forEach(p=>{
+    const r=pillars&&pillars[p.k];
+    const sc=clamp(num(r&&r.score,NaN),0,100);
+    const cls=(r&&EV[r.evidence_class])?r.evidence_class:'E6';
+    if(!Number.isFinite(sc))missing.push(p.k);
+    const s=Number.isFinite(sc)?sc:50, hw=EV[cls].hw, wf=p.w/100;
+    comp+=wf*s; lin+=wf*hw; rss+=Math.pow(wf*hw,2);
+    if(cls==='E1'||cls==='E2')backed+=p.w;
+    if(cls==='E4'||cls==='E5'||cls==='E6')soft++;
+  });
+  // Pillar errors are correlated — a company murky in one place is usually
+  // murky in several — so blend the linear and root-sum-square aggregates
+  // rather than taking RSS alone, which would understate the bar.
+  let iv=0.6*lin+0.4*Math.sqrt(rss);
+  if(soft>=3)iv*=1.25;
+  return {composite:Math.round(comp*10)/10, interval:Math.round(iv*10)/10,
+          backed:backed/100, soft, missing,
+          lo:Math.round((comp-iv)*10)/10, hi:Math.round((comp+iv)*10)/10};
+}
+const cashScore=r=>clamp(50+num(r,0)*5,50,85);
+function tone(backed){return backed>=.6?'measured':backed>=.35?'mid':'judged';}
+
+/* ══════════════════ 5 · RUN ACCESSORS ══════════════════ */
+const lastRun=()=>S.runs.length?S.runs[S.runs.length-1]:null;
+function scoresOf(run){const m={};if(run&&run.scores)Object.keys(run.scores).forEach(t=>m[t]=run.scores[t]);return m;}
+function priorScore(t,skip){for(let i=S.runs.length-1-(skip?1:0);i>=0;i--){const r=S.runs[i];if(r.scores&&r.scores[t])return r.scores[t];}return null;}
+function navOf(h,cash){let v=num(cash,0);Object.keys(h||{}).forEach(t=>v+=num(h[t].shares)*num(h[t].price));return v;}
+function weightsOf(h,cash){const nav=navOf(h,cash),w={};if(nav<=0)return w;
+  Object.keys(h).forEach(t=>w[t]=num(h[t].shares)*num(h[t].price)/nav);w.CASH=num(cash,0)/nav;return w;}
+
+/* ══════════════════ 5b · TIERS, PLAN, VALUATION TIEBREAK ══════════════════ */
+function tiersOf(rows,margin){
+  const srt=[...rows].sort((a,b)=>b.composite-a.composite);
+  const out=[]; let cur=[srt[0]];
+  for(let i=1;i<srt.length;i++){
+    const lead=cur[0], e=srt[i];
+    const need=Math.sqrt(lead.interval*lead.interval+e.interval*e.interval)+margin;
+    if(lead.composite-e.composite>need){out.push(cur);cur=[e];}else cur.push(e);
+  }
+  out.push(cur); return out;
+}
+function buildPlan(run){
+  if(!run)return null;
+  const held=Object.keys(S.holdings).filter(t=>run.scores[t]);
+  if(!held.length)return null;
+  const rows=held.map(t=>({t,...run.scores[t],val:(run.valuation||{})[t]}));
+  const T=tiersOf(rows,S.cfg.margin);
+  const d=S.cfg.tierSpread, n=T.length;
+  const mult={}; T.forEach((tier,k)=>{const m=n>1?1+d*(1-2*k/(n-1)):1;tier.forEach(r=>mult[r.t]=m);});
+  const cashW=navOf(S.holdings,S.cash)>0?S.cash/navOf(S.holdings,S.cash):0;
+  const inv=1-cashW, tot=Object.values(mult).reduce((a,b)=>a+b,0);
+  const base={}; rows.forEach(r=>base[r.t]=inv*mult[r.t]/tot);
+
+  // valuation breaks ties only inside a band, capped, never across bands
+  const tilt={}; rows.forEach(r=>tilt[r.t]=0);
+  T.forEach(tier=>{
+    const ys=tier.map(r=>num(r.val&&r.val.fcf_yield_pct,NaN)).filter(Number.isFinite);
+    if(tier.length<2||ys.length<2)return;
+    const mean=ys.reduce((a,b)=>a+b,0)/ys.length;
+    const spread=Math.max(...ys)-Math.min(...ys);
+    if(spread<=0.05)return;
+    tier.forEach(r=>{const y=num(r.val&&r.val.fcf_yield_pct,NaN);
+      if(Number.isFinite(y))tilt[r.t]=clamp((y-mean)/(spread/2),-1,1)*(S.cfg.valTilt/10000);});
+    const s0=tier.reduce((a,r)=>a+tilt[r.t],0)/tier.length;
+    tier.forEach(r=>tilt[r.t]-=s0);   // tilt is zero-sum inside the band
+  });
+
+  const ceiling=inv/held.length*S.cfg.ceiling;
+  const target={}; rows.forEach(r=>target[r.t]=Math.min(ceiling,Math.max(0,base[r.t]+tilt[r.t])));
+  const sum=Object.values(target).reduce((a,b)=>a+b,0);
+  if(sum>0)Object.keys(target).forEach(t=>target[t]*=inv/sum);
+  const now=weightsOf(S.holdings,S.cash);
+  return {tiers:T,mult,base,tilt,target,now,cashW,
+    rows:rows.map(r=>({...r,tier:T.findIndex(x=>x.includes(r)),
+      now:now[r.t]||0,target:target[r.t],delta:(target[r.t]||0)-(now[r.t]||0)}))};
+}
+
+/* ══════════════════ 6 · RULE ENGINE ══════════════════ */
+function adjudicate(run){
+  const out={veto:[],floor:[],promote:[],blocked:[],expand:[],opp:[],cap:[],rotate:[],flags:[]};
+  if(!run)return out;
+  const cfg=S.cfg, sc=run.scores||{}, cs=run.cashScore;
+  const held=Object.keys(S.holdings), bench=S.bench.slice();
+  const w=weightsOf(S.holdings,S.cash), n=held.length||1, eq=1/n;
+
+  held.concat(bench).forEach(t=>{const e=sc[t];if(e&&e.veto&&e.veto.length)out.veto.push({t,flags:e.veto});});
+
+  // Separation is tested on the DIFFERENCE, not by asking whether two bars
+  // fail to overlap. The non-overlap test is the intuitive one and it is far
+  // too strict: two ±3.8 estimates would need a 7.6-point gap, which against a
+  // basket clustered in the 80s and 90s means nothing ever moves. The gap must
+  // instead clear the error of the gap itself.
+  const sep=(a,b)=>Math.sqrt(a.interval*a.interval+b.interval*b.interval);
+  const CASH={composite:cs,interval:2};
+
+  held.forEach(t=>{const e=sc[t];if(!e)return;
+    if(e.interval>cfg.opacity){out.floor.push({t,kind:'opacity',iv:e.interval});return;}
+    const need=sep(e,CASH), gap=cs-e.composite;
+    if(gap>need)out.floor.push({t,kind:'cash',gap:Math.round(gap*10)/10,need:Math.round(need*10)/10,cs});});
+
+  const ranked=held.filter(t=>sc[t]).sort((a,b)=>sc[a].composite-sc[b].composite);
+  const weakest=ranked[0];
+  const comps=held.filter(t=>sc[t]).map(t=>sc[t].composite).sort((a,b)=>a-b);
+  const median=comps.length?(comps.length%2?comps[(comps.length-1)/2]:(comps[comps.length/2-1]+comps[comps.length/2])/2):0;
+
+  // Qualifying bench names compete for one slot. Rank them; the best takes it,
+  // the rest queue. Five identical "promote" lines against one incumbent is noise.
+  const ranked_bench=bench.filter(b=>sc[b]).sort((a,b)=>sc[b].composite-sc[a].composite);
+  let slotTaken=false; const tenureHeld=[];
+  ranked_bench.forEach(b=>{const e=sc[b];if(!e)return;
+    if(e.interval>cfg.opacity){out.blocked.push({t:b,vs:'—',why:`±${e.interval} exceeds the ±${cfg.opacity} opacity limit — not measurable enough to own`});return;}
+    if(held.length<cfg.max&&e.composite-median>e.interval){out.expand.push({t:b,c:e.composite,median:Math.round(median*10)/10});return;}
+    if(!weakest)return;
+    const inc=sc[weakest], tenure=(S.runs.length)-(S.holdings[weakest]?.sinceRun||0);
+    const gap=Math.round((e.composite-inc.composite)*10)/10, need=Math.round((sep(e,inc)+cfg.margin)*10)/10;
+    if(gap>need){
+      if(tenure<cfg.tenure){tenureHeld.push(`${b} by ${gap}`);}
+      else if(!slotTaken){out.promote.push({t:b,vs:weakest,gap,need});slotTaken=true;}
+      else out.blocked.push({t:b,vs:weakest,why:`also clears ${weakest} by ${gap} pts, but the slot goes to the highest scorer — queued for the next run`});
+    } else out.blocked.push({t:b,vs:weakest,why:`gap of ${gap} pts does not clear the ${need} pt separation these two error bars demand`});
+  });
+
+  (run.opportunity||[]).forEach(o=>{
+    const t=tk(o.ticker), e=sc[t], prev=priorScore(t,true), bps=Math.abs(num(o.weight_delta_bps));
+    const r={t,type:o.type,bps,ok:true,why:[]};
+    if(!e){r.ok=false;r.why.push('no blind score this run');}
+    if(bps>cfg.oppcap){r.ok=false;r.why.push(`${bps}bps exceeds the ${cfg.oppcap}bps per-run cap`);}
+    if(o.type==='quality_rising'){
+      if(!prev){r.why.push('no prior blind score — increment is unverified');r.ok=false;}
+      else{const d=e.composite-prev.composite, need=Math.max(e.interval,prev.interval);
+        if(d<=need){r.ok=false;r.why.push(`score moved ${d.toFixed(1)} pts, inside the ±${need.toFixed(1)} band`);}
+        else r.why.push(`score rose ${d.toFixed(1)} pts against a ±${need.toFixed(1)} band`);}
+    }
+    if(o.type==='uncertainty_resolved'){
+      if(!prev){r.ok=false;r.why.push('no prior interval to compare');}
+      else{const d=prev.interval-e.interval;
+        if(d<3){r.ok=false;r.why.push(`interval narrowed only ${d.toFixed(1)} pts; needs 3`);}
+        else r.why.push(`interval narrowed ${d.toFixed(1)} pts — ±${prev.interval} to ±${e.interval}`);}
+    }
+    if(o.type==='quality_valuation_divergence'){
+      const g=o.price_contamination_check||{};
+      if(g.score_moved_with_price===true){r.ok=false;r.why.push('score moved with the price — contaminated, this is a price signal wearing a costume');}
+      if(g.blind_measured!==true){r.ok=false;r.why.push('not affirmed as measured blind');}
+      if(prev&&e&&e.composite<prev.composite-0.5){r.ok=false;r.why.push('quality is falling, not stable — divergence does not apply');}
+      if(r.ok)r.why.push('quality stable or rising while valuation burden fell, measured blind');
+    }
+    if(!o.falsifier||String(o.falsifier).trim().length<12){r.ok=false;r.why.push('no falsifier stated');}
+    out.opp.push(r);
+  });
+
+  if(tenureHeld.length)out.blocked.push({t:tenureHeld.length+' candidate'+(tenureHeld.length===1?'':'s'),vs:weakest,
+    why:`${tenureHeld.join(' pts, ')} pts — all clear the separation, but ${weakest} is ${(S.runs.length)-(S.holdings[weakest]?.sinceRun||0)} run(s) into a ${cfg.tenure}-run tenure hold. Tenure exists so a 2-point wobble cannot swap a name out and back in.`});
+
+  if(cfg.benchRotate>0&&ranked_bench.length){
+    const qualifies=new Set(out.promote.concat(out.blocked.filter(x=>/also clears/.test(x.why))).map(x=>x.t));
+    const evict=ranked_bench.slice().reverse().filter(t=>!qualifies.has(t)).slice(0,cfg.benchRotate);
+    evict.forEach(t=>out.rotate.push({t,score:sc[t]?sc[t].composite:null}));
+  }
+
+  const ceiling=eq*cfg.ceiling;
+  held.forEach(t=>{if(w[t]>ceiling+1e-9)out.cap.push({t,w:w[t],ceiling});});
+
+  if(run.orderOK===false)out.flags.push('Blind scores were not emitted before the decision. The seal did not hold on this run.');
+  if(run.sealState&&!['verified','n/a','declined'].includes(run.sealState))out.flags.push(run.sealNote);
+  if(run.sealState==='declined')out.flags.push(run.sealNote);
+  if(run.revised&&run.revised.length)out.flags.push('Scores changed after the history was opened: '+run.revised.join(', ')+'. Revision is allowed but must be argued, never silent.');
+  if(run.repairs&&run.repairs.length)out.flags.push('Repaired on the way in: '+run.repairs.join('; ')+'.');
+  if(run.mathOff&&run.mathOff.length)out.flags.push('Model arithmetic disagreed with the rubric for '+run.mathOff.join(', ')+'. The app\u2019s computation stands.');
+  return out;
+}
+
+/* ══════════════════ 7 · PROMPT ══════════════════ */
+function buildPrompt(){
+  readCfg();
+  const held=Object.keys(S.holdings), bench=S.bench.slice();
+  const universe=held.concat(bench);
+  const first=universe.length===0;
+  const slots=shuffle(universe).map((t,i)=>({slot:slotId(i),ticker:t}));
+  S.slots=slots;
+
+  S.nonce='PX-'+Math.random().toString(36).slice(2,8).toUpperCase()+'-'+Math.random().toString(36).slice(2,8).toUpperCase();
+  const sealed={
+    nonce:S.nonce,
+    run:S.runs.length,
+    held:held.map(t=>({t,shares:Number(S.holdings[t].shares.toFixed(4))})),
+    cash:Number(S.cash.toFixed(2)),
+    prior:Object.keys(scoresOf(lastRun())).map(t=>`${t} ${lastRun().scores[t].composite}`).join(', '),
+    open_triggers:Object.values(S.triggers).filter(x=>x.status==='pending')
+      .map(x=>`${x.ticker}/${x.pillar}: ${x.text}`).slice(0,20),
+    last:lastRun()?`${lastRun().decision} — ${String(lastRun().reason).slice(0,300)}`:null
+  };
+
+  const P=[];
+  P.push('FUNDAMENTALS-ONLY QUALITY STEWARD — PRYMIS IV. This is a research ledger, not financial advice.');
+  P.push('');
+  P.push('You will do three things in strict order: score blind, then open the sealed history, then decide. The ordering is checked: the receiving app confirms that "blind_scores" appears in your output before "decision", and permanently marks the seal of that run as broken if it does not. A broken seal is not erased later.');
+  P.push('');
+  P.push('════ PART 0 · NON-NEGOTIABLE ════');
+  P.push(`TODAY IS ${new Date().toISOString().slice(0,10)}. Set run_meta.research_date to today's actual date.`);
+  P.push('You must look up live data. Refresh every price and check every fundamental against current sources this run. If you cannot search the web from where you are running, STOP and say so — do not answer from recollection. Prices and figures recalled from training are the single failure this system cannot absorb, and the receiving app rejects any run dated more than a few days old or whose prices jump implausibly from the last recorded run.');
+  P.push('');
+  P.push('ACCOUNTING ARITHMETIC — get this right or the run is unusable:');
+  P.push(`  · Capital under management: ${first?'$'+S.cfg.startCash+' to deploy':'$'+Math.round(navOf(S.holdings,S.cash))+' currently invested'}.`);
+  P.push('  · target_weights are DECIMAL FRACTIONS summing to 1.0. Not percentages. 0.09, never 9.0.');
+  P.push('  · positions are SHARE COUNTS, fractional allowed: shares = target_weight × capital ÷ current price.');
+  P.push('  · cash is dollars remaining, not a percentage.');
+  P.push('');
+  P.push('════ PART 1 · BLIND SCORING ════');
+  P.push('Score every slot below on QUALITY ALONE. Valuation is NOT part of the score; it enters later, at the decision layer.');
+  P.push('The list is shuffled. Slot IDs are arbitrary. You are deliberately not told which names are held, which are on the bench, what they scored before, or what they weigh. Do not guess, and do not open Part 2 until every blind score is written.');
+  P.push('');
+  P.push('CANDIDATES');
+  slots.forEach(s=>P.push(`  ${s.slot}  ${s.ticker}`));
+  if(first){
+    P.push(`  (empty — initial selection run.)`);
+    P.push('');
+    P.push(`INITIAL SELECTION IS A HARD COUNT. Research and propose ${S.cfg.initial} holdings and ${S.cfg.bench} bench names, then write a full blind score for ALL ${S.cfg.initial+S.cfg.bench} of them in blind_scores. Not five. Not "the ones I chose." All ${S.cfg.initial+S.cfg.bench}, each with seven pillars, evidence classes and judgements. The app rejects the run outright if positions does not contain exactly ${S.cfg.initial} names, if bench does not contain ${S.cfg.bench}, or if any bench name lacks a blind score. Keep at least one bench name outside the largest 100 index constituents.`);
+  } else {
+    P.push('');
+    P.push(`CHALLENGER SLOT. Score every name listed above, and additionally research and score ONE new candidate not in the list. It replaces the lowest-scoring bench name this run. Prefer a candidate outside the largest 100 index constituents — the bench is where discovery happens, and five permanent mega-caps discover nothing. Mark it in bench with keep:true.`);
+  }
+  P.push('');
+  P.push('PILLARS AND WEIGHTS');
+  PILLARS.forEach(p=>P.push(`  ${p.k} (${p.w}) — ${p.n}\n     ${p.anchor}`));
+  P.push('');
+  P.push('EVIDENCE CLASS — tag every pillar. This sets the error bar; you do not state the bar yourself.');
+  Object.keys(EV).forEach(k=>P.push(`  ${k}  ±${EV[k].hw}  ${EV[k].n}`));
+  P.push('');
+  P.push('CLASSIFICATION DISCIPLINE — read this before tagging anything E5. If the note you write for a pillar cites a number you found in a filing — a renewal rate, a share percentage, a transaction count, a retention figure, a backlog — that pillar is E3 at worst, never E5. A moat judgement resting on "renewal rates were 92.2%" is anchored; a moat judgement resting on "the brand feels durable" is not. Over-classing to E5 is not humility. It widens every bar until no two companies can be told apart, and an instrument that can never distinguish anything is worse than no instrument. Reserve E5 for pillars where you genuinely found no number.');
+  P.push('');
+  P.push('VETO FLAGS — these are gates, not deductions. Raise one and the name is disqualified regardless of score: '+VETOES.join(', ')+'.');
+  P.push('');
+  P.push('JUDGEMENT STATEMENTS — for every pillar you class E3 or worse, write one judgement: the claim you are making, and the specific observable that would show it wrong. A judgement with no falsifier is a mood, not a judgement. These are recorded and checked against you on later runs.');
+  P.push('');
+  P.push('VALUATION — collected but kept OUT of the quality score. For each name give valuation.fcf_yield_pct: trailing or normalised free cash flow divided by current market capitalisation, as a percentage, plus the basis you used and an evidence class. Use normalised cash flow, not a single quarter annualised. It is used only to break ties between names the quality scores cannot separate, and it can never move a name into or out of the basket.');
+  P.push('');
+  P.push('CASH is scored by formula from the short rate, not by you. Report short_rate_pct and the app does the rest.');
+  P.push('');
+  P.push('════ PART 2 · SEALED HISTORY ════');
+  P.push('Base64. Open it only after Part 1 is written out in full.');
+  P.push('Inside you will find a one-time nonce. Decoding is how you prove the seal was opened in the right order, so:');
+  P.push('  · Write sealed_readback AFTER blind_scores and BEFORE decision.');
+  P.push('  · Put the nonce in sealed_readback.nonce, exactly as it appears.');
+  P.push('  · Put the held tickers you found in sealed_readback.held.');
+  P.push('The app holds the true nonce and checks both the value and its position in your output. A wrong nonce means you did not actually decode; a nonce appearing before blind_scores means you opened the block early. Either way the run is marked and the mark is permanent.');
+  P.push('IF YOU CANNOT DECODE THE BLOCK: write sealed_readback.nonce exactly as CANNOT_DECODE and carry on with the decision using no history at all. That is an accepted, unpenalised answer. Do NOT guess a nonce, and do NOT describe prior scores, prior triggers or prior holdings you did not actually read out of the block — inventing history is the one error this system cannot detect any other way and cannot recover from.');
+  P.push('');
+  P.push(b64(JSON.stringify(sealed)));
+  P.push('');
+  P.push('════ PART 3 · DECISION ════');
+  P.push('Now, with history in hand, decide. You may revise a blind score only by writing it into revised_scores with an argued reason. Silent revision fails validation.');
+  P.push('');
+  P.push('THE RULES. The app recomputes all of these independently, so state your actions and let them be checked.');
+  P.push(`  · Default is HOLD. Doing nothing is a real answer and usually the right one.`);
+  P.push(`  · Promotion: a bench name replaces the weakest holding only when the quality gap exceeds the error of that gap, sqrt(bar_bench^2 + bar_held^2). A wide bar therefore protects the incumbent, and a hazy candidate cannot displace a well-documented one.`);
+  P.push(`  · Opacity limit: nothing with a bar wider than +/-${S.cfg.opacity} is holdable, held or bench. When evidence quality falls, the SCORE should fall, not merely the confidence — otherwise opacity becomes a defence.`);
+  P.push(`  · Tenure: a holding is protected from relegation for ${S.cfg.tenure} runs after purchase.`);
+  P.push(`  · Floor: a holding goes to cash when cash leads it by more than sqrt(4 + bar_held^2). Cash is a competitor with a narrow bar, not a residue.`);
+  P.push(`  · Elasticity: the basket may run to ${S.cfg.max} names. Add rather than swap only when a bench name beats the median holding by more than its own error bar.`);
+  P.push(`  · Bench: keep ${S.cfg.bench} names. Drop one only when it falls below the cash score or something genuinely better appears — never on a schedule, because a bench that churns can never build a record. Keep at least one name outside the largest 100 index constituents.`);
+  P.push('');
+  P.push(`  · Weights follow quality BANDS, not individual scores. The app groups holdings into bands where a band is the set of names that cannot be told apart from the band leader, then weights the bands. It never tilts between two names whose error bars overlap, because that is tilting on noise. Valuation breaks ties inside a band only, capped at ${S.cfg.valTilt}bps.`);
+  P.push(`  · Bench rotation: the lowest-scoring bench name is replaced each review, unless it currently clears the promotion bar.`);
+  P.push('');
+  P.push('OPPORTUNITY — the aperture, and the only route to a weight change without a trade.');
+  P.push('  Opportunity is defined on the quality side. Price falling is not opportunity; it is price falling.');
+  P.push('  · quality_rising — the blind score rose more than the error band since the last run, from a named pillar improvement.');
+  P.push('  · uncertainty_resolved — the interval narrowed by 3+ points because a question got answered. The company did not improve; your knowledge did.');
+  P.push('  · quality_valuation_divergence — valuation burden fell while the blind score held or rose. Requires price_contamination_check: if the score moved in the same direction as the price, it is contaminated and does not count.');
+  P.push(`  Each increment is capped at ${S.cfg.oppcap}bps this run, ceiling ${S.cfg.ceiling}× equal weight, funded from cash or the weakest holding, and must carry a falsifier.`);
+  P.push('');
+  P.push('BANNED: price performance, momentum, technicals, chart patterns, analyst targets, benchmark or relative return. Price is for share accounting and valuation-burden sanity only. Refresh every price live this run; never carry the previous run\u2019s prices.');
+  P.push('');
+  if(S.news.trim()){P.push('EVENTS TO TRIAGE');P.push(S.news.trim());P.push('For each: this matters only if it changes debt / cash flow / margins / moat / necessity / accounting / governance / valuation burden. Otherwise IGNORE.');P.push('');}
+  P.push('════ OUTPUT ════');
+  P.push('One JSON object. blind_scores first. No prose after it.');
+  P.push(JSON.stringify(schema(slots),null,2));
+  S.lastPrompt=P.join('\n');
+  $('#prompt-out').textContent=S.lastPrompt;
+  $('#shuffle-tag').textContent=slots.length+' slots shuffled';
+  const blob=b64(JSON.stringify(sealed));
+  $('#seal-blob').dataset.plain=JSON.stringify(sealed,null,1);
+  $('#seal-blob').dataset.sealed=blob;
+  $('#seal-blob').textContent=blob;
+  $('#btn-reveal').textContent='reveal';
+  $('#seal-nonce').textContent=S.nonce;
+  save();toast('Prompt built — order shuffled, history sealed');
+}
+function schema(slots){
+  const ex=(slots&&slots[0])||{slot:'S01-XYZ',ticker:'EXAMPLE'};
+  const pl={};PILLARS.forEach(p=>pl[p.k]={score:0,evidence_class:'E1|E2|E3|E4|E5|E6',note:'one line of evidence'});
+  return {
+    blind_scores:[{slot:ex.slot,ticker:ex.ticker,pillars:pl,veto_flags:[],
+      valuation:{fcf_yield_pct:0.0,basis:'trailing FCF / market cap',evidence_class:'E2'},
+      judgements:[{pillar:'moat',claim:'what you are asserting',falsifier:'the specific observable that would show this wrong'}]}],
+    sealed_opened:true,
+    revised_scores:[{ticker:'ONLY_IF_REVISING',pillar:'moat',new_score:0,reason:'why the history changed your reading'}],
+    run_meta:{model_identity:'which model and version produced this',research_date:'YYYY-MM-DD',short_rate_pct:0.0,
+      blind_attestation:'I wrote every blind score before opening the sealed block.'},
+    decision:'INITIAL_SELECT | HOLD | REALLOCATE',
+    decision_reason:'plain language, fundamentals only',
+    prices:{[ex.ticker]:0.0}, positions:{[ex.ticker]:0.0}, cash:0.0,
+    target_weights:{[ex.ticker]:0.0,CASH:0.0},
+    basket_actions:[{ticker:ex.ticker,action:'hold|promote|relegate|add_weight|reduce_weight',
+      from_weight:0.0,to_weight:0.0,rule_cited:'which rule authorises this',reason:'fundamentals-only reason'}],
+    opportunity:[{ticker:ex.ticker,type:'quality_rising|uncertainty_resolved|quality_valuation_divergence',
+      weight_delta_bps:0,evidence:'what changed on the quality side',falsifier:'what would show this increment was wrong',
+      price_contamination_check:{score_moved_with_price:false,blind_measured:true}}],
+    bench:[{ticker:'BENCH_NAME',keep:true,reason:'why it stays or goes'}],
+    benchmark_accounting:{sp500_price_index_level:0.0,date:'YYYY-MM-DD',used_in_decision:false},
+    banned_inputs_check:{price_performance_used:false,momentum_used:false,technical_analysis_used:false,
+      analyst_price_targets_used:false,benchmark_used_in_decision:false,price_used_only_for_accounting:true},
+    evidence_notes:'sources and uncertainty. no long quotations.'
+  };
+}
+
+/* ══════════════════ 8 · PARSE & RECORD ══════════════════ */
+function parseJSON(raw){const s=raw.trim();if(!s)return null;
+  try{return JSON.parse(s);}catch(e){}
+  let m=s.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);if(m){try{return JSON.parse(m[1]);}catch(e){}}
+  const a=s.indexOf('{'),b=s.lastIndexOf('}');
+  if(a>=0&&b>a){try{return JSON.parse(s.slice(a,b+1));}catch(e){}}
+  return null;}
+
+function record(){
+  const raw=$('#paste').value;
+  const msg=$('#parse-msg');
+  const fail=t=>{msg.innerHTML='<div class="msg stop"><b>Not recorded.</b><span class="why">'+esc(t)+'</span></div>';toast(t,true);};
+  if(!raw.trim())return fail('Nothing pasted.');
+  const o=parseJSON(raw);
+  if(!o)return fail('Could not read that as JSON. Paste the whole object, fences and all.');
+
+  // ── the seal: left-to-right generation means output order is a commitment
+  const iB=raw.indexOf('"blind_scores"'), iD=raw.indexOf('"decision"');
+  const orderOK=iB>=0&&(iD<0||iB<iD);
+  if(iB<0)return fail('No blind_scores block. The scoring pass is the whole instrument.');
+
+  // ── seal verification. Decoding base64 is costly enough that a model cannot
+  // use this content silently; requiring it back proves the decode happened,
+  // and its position in the raw text proves it happened in the right order.
+  const rb=o.sealed_readback||{};
+  const iR=raw.indexOf('"sealed_readback"');
+  let sealState='not_opened', sealNote='The sealed block was never decoded — the model decided without history.';
+  if(S.nonce&&String(rb.nonce||'').trim()){
+    if(String(rb.nonce).trim().toUpperCase()==='CANNOT_DECODE'){
+      sealState='declined';sealNote='The model reported it could not decode the block and proceeded without history. Honest, and the decision should be read as history-free.';
+    } else if(String(rb.nonce).trim()!==S.nonce){sealState='wrong';sealNote=`Nonce mismatch: got "${String(rb.nonce).slice(0,24)}", expected "${S.nonce}". The block was never decoded — treat any claim about prior scores, triggers or holdings in this run as fabricated.`;}
+    else if(iR>=0&&iR<iB){sealState='broken';sealNote='The nonce was echoed before the blind scores. The history was opened first.';}
+    else{sealState='verified';sealNote='Seal verified: decoded, in order, after the blind pass.';}
+  } else if(!S.nonce){sealState='n/a';sealNote='No nonce was issued for this prompt.';}
+
+  const bs=Array.isArray(o.blind_scores)?o.blind_scores:[];
+  if(!bs.length)return fail('blind_scores was empty.');
+
+  const scores={}, valuation={}, mathOff=[];
+  for(const e of bs){
+    const t=tk(e.ticker);
+    if(!okTicker(t))return fail('Placeholder or malformed ticker in blind_scores: '+(e.ticker||'(blank)'));
+    const s=scoreOf(e.pillars);
+    if(s.missing.length)return fail(`${t} is missing pillar scores: ${s.missing.join(', ')}`);
+    s.veto=(Array.isArray(e.veto_flags)?e.veto_flags:[]).filter(f=>VETOES.includes(String(f)));
+    s.judgements=(Array.isArray(e.judgements)?e.judgements:[]).filter(j=>j&&j.claim);
+    s.pillars=e.pillars;
+    if(e.valuation)valuation[t]={fcf_yield_pct:num(e.valuation.fcf_yield_pct,NaN),
+      basis:String(e.valuation.basis||'').slice(0,120),evidence_class:String(e.valuation.evidence_class||'')};
+    if(Number.isFinite(num(e.composite,NaN))&&Math.abs(num(e.composite)-s.composite)>1.5)mathOff.push(t);
+    scores[t]=s;
+  }
+
+  const revised=(Array.isArray(o.revised_scores)?o.revised_scores:[])
+    .filter(r=>r&&r.ticker&&r.reason).map(r=>tk(r.ticker));
+
+  const meta=o.run_meta||{};
+  const cs=cashScore(num(meta.short_rate_pct,0));
+
+  // ── accounting
+  const prices={},positions={};
+  Object.keys(o.prices||{}).forEach(k=>{const t=tk(k);if(okTicker(t))prices[t]=num(o.prices[k]);});
+  Object.keys(o.positions||{}).forEach(k=>{const t=tk(k);if(t==='CASH')return;
+    if(okTicker(t)&&num(o.positions[k])>0)positions[t]=num(o.positions[k]);});
+  // ── freshness gate. A model without live data will happily recall prices
+  // from training and present them as research. That is the failure mode this
+  // instrument is least able to survive, so it is checked first and hard.
+  const rd=String((o.run_meta||{}).research_date||'').slice(0,10);
+  const age=Math.round((Date.now()-Date.parse(rd+'T12:00:00Z'))/864e5);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(rd)||!Number.isFinite(age))
+    return fail('No usable research_date. Every run must be dated by the model.');
+  if(age>S.cfg.stale||age<-1)
+    return fail(`research_date is ${rd}, ${age} days old. The model was not looking at live data — it recalled prices from training. Turn on web search or grounding in the tool you are pasting into, then run it again.`);
+
+  const prev=lastRun();
+  if(prev){
+    const common=Object.keys(prices).filter(t=>prev.holdings[t]&&prev.holdings[t].price>0);
+    if(common.length>=3){
+      const mv=common.map(t=>Math.abs(prices[t]/prev.holdings[t].price-1)).sort((a,b)=>a-b);
+      const med=mv[Math.floor(mv.length/2)];
+      if(med>0.25)return fail(`Prices moved a median of ${(med*100).toFixed(0)}% across the basket since ${prev.date}. That is not a market move, it is a different dataset. Check that the model actually fetched live quotes.`);
+    }
+    const spx=num((o.benchmark_accounting||{}).sp500_price_index_level,NaN);
+    if(Number.isFinite(spx)&&Number.isFinite(prev.spx)&&prev.spx>0&&Math.abs(spx/prev.spx-1)>0.15)
+      return fail(`The S&P level ${spx} is ${((spx/prev.spx-1)*100).toFixed(0)}% from the ${prev.spx} recorded on ${prev.date}. The model is not reading current data.`);
+  }
+
+  // ── repairs. You get one paste, so the app does arithmetic the model fumbled
+  // rather than bouncing you back for another round.
+  const repairs=[];
+  let W={};Object.keys(o.target_weights||{}).forEach(k=>{const t=tk(k),v=num(o.target_weights[k],NaN);if(Number.isFinite(v))W[t]=v;});
+  const wsum=Object.values(W).reduce((a,b)=>a+b,0);
+  if(wsum>2.5){Object.keys(W).forEach(k=>W[k]/=100);repairs.push('target_weights arrived as percentages and were normalised to fractions');}
+  let cash=num(o.cash,NaN);
+  if(!Object.keys(positions).length&&Object.keys(W).length){
+    const capital=Object.keys(S.holdings).length?navOf(S.holdings,S.cash):S.cfg.startCash;
+    let spent=0;
+    Object.keys(W).forEach(t=>{if(t==='CASH'||!(prices[t]>0))return;
+      positions[t]=W[t]*capital/prices[t];spent+=positions[t]*prices[t];});
+    cash=Number.isFinite(W.CASH)?W.CASH*capital:Math.max(0,capital-spent);
+    repairs.push(`share counts were missing; derived from target weights against ${money(capital)} of capital`);
+  }
+  if(!Number.isFinite(cash)||cash<0)return fail('cash is missing or negative, and could not be derived from weights.');
+  const holders=Object.keys(positions);
+  if(!holders.length)return fail('No holdings could be established. The model gave neither share counts nor usable target weights.');
+  if(String(o.decision||'').toUpperCase()==='INITIAL_SELECT'){
+    const raw_nav=Object.keys(positions).reduce((a,t)=>a+positions[t]*prices[t],0)+cash;
+    const target=S.cfg.startCash;
+    if(raw_nav>0&&Math.abs(raw_nav/target-1)>0.02){
+      const k=target/raw_nav;
+      Object.keys(positions).forEach(t=>positions[t]*=k); cash*=k;
+      repairs.push(`deployed ${money(raw_nav)} against ${money(target)} of capital; positions rescaled ${k.toFixed(1)}×`);
+    }
+  }
+  if(String(o.decision||'').toUpperCase()==='INITIAL_SELECT'){
+    if(holders.length!==S.cfg.initial)
+      return fail(`Initial selection must hold exactly ${S.cfg.initial} names; this run holds ${holders.length}. Re-run and require the full basket.`);
+    const benchIn=(Array.isArray(o.bench)?o.bench:[]).map(x=>tk(x&&x.ticker)).filter(okTicker);
+    const noScore=benchIn.filter(t=>!scores[t]);
+    if(benchIn.length<S.cfg.bench)
+      return fail(`Initial selection needs ${S.cfg.bench} bench names; got ${benchIn.length}.`);
+    if(noScore.length)
+      return fail(`Bench names with no blind score: ${noScore.join(', ')}. All ${S.cfg.initial+S.cfg.bench} names must be scored in the blind pass, not just the ones chosen.`);
+  }
+  if(holders.length>S.cfg.max)return fail(`${holders.length} holdings exceeds the ${S.cfg.max} cap.`);
+  for(const t of holders)if(!(prices[t]>0))return fail('No accounting price for '+t);
+  const unscored=holders.filter(t=>!scores[t]);
+  if(unscored.length)return fail(`Held with no blind score: ${unscored.join(', ')}. A holding that was never scored this run cannot enter the basket, whatever the decision text claims about it.`);
+
+  const banned=o.banned_inputs_check||{};
+  const bad=['price_performance_used','momentum_used','technical_analysis_used','analyst_price_targets_used','benchmark_used_in_decision']
+    .filter(k=>banned[k]===true);
+  if(bad.length)return fail('Banned inputs self-reported as used: '+bad.join(', '));
+
+  const nh={};
+  holders.forEach(t=>{nh[t]={shares:positions[t],price:prices[t],
+    sinceRun:S.holdings[t]?(S.holdings[t].sinceRun||0):S.runs.length};});
+  const nav=navOf(nh,cash);
+  if(!(nav>0))return fail('Computed NAV is not positive.');
+
+  const bench=(Array.isArray(o.bench)?o.bench:[]).filter(b=>b&&b.keep!==false)
+    .map(b=>tk(b.ticker)).filter(t=>okTicker(t)&&!nh[t]).slice(0,S.cfg.bench);
+
+  const run={date:String(meta.research_date||'').slice(0,10)||new Date().toISOString().slice(0,10),
+    ts:new Date().toISOString(), model:String(meta.model_identity||'unrecorded').slice(0,80),
+    decision:String(o.decision||'HOLD').toUpperCase(), reason:String(o.decision_reason||'').slice(0,1400),
+    shortRate:num(meta.short_rate_pct,0), cashScore:cs, scores, valuation, revised, mathOff, orderOK,
+    sealedOpened:o.sealed_opened===true, sealState, sealNote, repairs, ageDays:age,
+    opportunity:Array.isArray(o.opportunity)?o.opportunity:[],
+    actions:Array.isArray(o.basket_actions)?o.basket_actions:[],
+    nav, cash, holdings:JSON.parse(JSON.stringify(nh)), bench,
+    bench_in:bench, evidence:String(o.evidence_notes||'').slice(0,2000),
+    spx:num((o.benchmark_accounting||{}).sp500_price_index_level,NaN)};
+
+  ghostsFor(run);
+  S.holdings=nh; S.cash=cash; S.bench=bench;
+  S.runs.push(run);
+  updateTriggers(run);
+  $('#paste').value='';
+  save(); renderAll();
+  const a=adjudicate(run);
+  const problems=a.flags.length;
+  msg.innerHTML='<div class="msg '+(problems?'warn':'go')+'"><b>Run '+S.runs.length+' recorded.</b><span class="why">'+
+    (problems?a.flags.join(' · '):'Seal held. Scores computed from the rubric.')+'</span></div>';
+  toast('Run '+S.runs.length+' recorded');
+}
+
+/* ── ghost book: what we sold vs what we bought, and what doing nothing would have done ── */
+function ghostsFor(run){
+  const before=Object.keys(S.holdings), after=Object.keys(run.holdings);
+  before.filter(t=>!after.includes(t)).forEach(out=>{
+    const inn=after.filter(t=>!before.includes(t))[0]||'CASH';
+    S.ghosts.push({kind:'swap',date:run.date,out,inn,
+      outPrice:S.holdings[out]?S.holdings[out].price:null,
+      innPrice:run.holdings[inn]?run.holdings[inn].price:null});});
+  (run.opportunity||[]).forEach(o=>{
+    if(num(o.weight_delta_bps)!==0)S.ghosts.push({kind:'opportunity',date:run.date,
+      out:'(no action)',inn:tk(o.ticker),bps:num(o.weight_delta_bps),
+      innPrice:run.holdings[tk(o.ticker)]?run.holdings[tk(o.ticker)].price:null,
+      falsifier:String(o.falsifier||'').slice(0,240)});});
+}
+function ghostMark(g){
+  const px=t=>{for(let i=S.runs.length-1;i>=0;i--){const h=S.runs[i].holdings[t];if(h)return h.price;}return null;};
+  const a=g.innPrice?px(g.inn):null, b=g.outPrice?px(g.out):null;
+  return {inn:(a&&g.innPrice)?a/g.innPrice-1:null, out:(b&&g.outPrice)?b/g.outPrice-1:null};
+}
+
+/* ── trigger ledger: falsifiers become tracked commitments ── */
+function updateTriggers(run){
+  Object.keys(run.scores).forEach(t=>{
+    (run.scores[t].judgements||[]).forEach(j=>{
+      const key=t+'|'+(j.pillar||'general'), txt=String(j.falsifier||j.claim||'').trim();
+      if(!txt)return;
+      const cur=S.triggers[key]||{ticker:t,pillar:j.pillar||'general',texts:[],first:run.date,status:'pending',seen:0};
+      if(!cur.texts.includes(txt))cur.texts.push(txt);
+      cur.text=txt; cur.last=run.date; cur.seen++;
+      S.triggers[key]=cur;});});
+  (run.opportunity||[]).forEach(o=>{
+    const txt=String(o.falsifier||'').trim();if(!txt)return;
+    const key=tk(o.ticker)+'|opportunity:'+o.type;
+    const cur=S.triggers[key]||{ticker:tk(o.ticker),pillar:'opportunity',texts:[],first:run.date,status:'pending',seen:0};
+    if(!cur.texts.includes(txt))cur.texts.push(txt);
+    cur.pillar='opportunity · '+o.type; cur.text=txt; cur.last=run.date; cur.seen++;
+    S.triggers[key]=cur;});
+}
+
+/* ══════════════════ 9 · THE LADDER ══════════════════ */
+function renderLadder(){
+  const host=$('#ladder'), run=lastRun();
+  if(!run){host.innerHTML='<p class="empty">The ladder draws once a run is recorded. Every candidate appears as a score and its error bar; a trade is only permitted where two bars fail to overlap.</p>';return;}
+  $('#ladder-date').textContent=run.date+' · '+run.model;
+  const held=Object.keys(S.holdings), bench=S.bench;
+  const rows=held.concat(bench).filter(t=>run.scores[t])
+    .map(t=>({t,held:held.includes(t),...run.scores[t]}))
+    .sort((a,b)=>b.composite-a.composite);
+  if(!rows.length){host.innerHTML='<p class="empty">No scored names.</p>';return;}
+
+  const lo=Math.max(0,Math.min(run.cashScore-6,...rows.map(r=>r.lo))-3);
+  const hi=Math.min(100,Math.max(...rows.map(r=>r.hi))+3);
+  const L=104,R=76,T=20,rowH=30,H=T+rows.length*rowH+30,W=780;
+  const x=v=>L+(v-lo)/(hi-lo)*(W-L-R);
+  let g='';
+  for(let v=Math.ceil(lo/10)*10;v<=hi;v+=10){
+    g+=`<line x1="${x(v).toFixed(1)}" y1="${T-4}" x2="${x(v).toFixed(1)}" y2="${T+rows.length*rowH}" stroke="#263241" stroke-width="1"/>`;
+    g+=`<text x="${x(v).toFixed(1)}" y="${H-12}" fill="#5b6b7a" font-size="10" font-family="ui-monospace,monospace" text-anchor="middle">${v}</text>`;}
+  const cx=x(run.cashScore);
+  g+=`<line x1="${cx.toFixed(1)}" y1="${T-8}" x2="${cx.toFixed(1)}" y2="${T+rows.length*rowH+4}" stroke="#7fa8b8" stroke-width="1.5" stroke-dasharray="3 3"/>`;
+  g+=`<text x="${cx.toFixed(1)}" y="${T-11}" fill="#7fa8b8" font-size="9.5" font-family="ui-monospace,monospace" text-anchor="middle" letter-spacing="1">CASH ${run.cashScore.toFixed(0)}</text>`;
+
+  rows.forEach((r,i)=>{
+    const y=T+i*rowH+rowH/2, c=`var(--${tone(r.backed)})`;
+    const vet=r.veto&&r.veto.length;
+    g+=`<text x="0" y="${y+3.5}" fill="${r.held?'#e6edf3':'#7c8b9a'}" font-size="11.5" font-family="ui-monospace,monospace" font-weight="${r.held?600:400}">${esc(r.t)}</text>`;
+    g+=`<text x="62" y="${y+3.5}" fill="#5b6b7a" font-size="9" font-family="ui-monospace,monospace">${r.held?'HELD':'bench'}</text>`;
+    g+=`<line x1="${x(r.lo).toFixed(1)}" y1="${y}" x2="${x(r.hi).toFixed(1)}" y2="${y}" stroke="${vet?'var(--fire)':c}" stroke-width="2" opacity=".55"/>`;
+    [r.lo,r.hi].forEach(v=>{g+=`<line x1="${x(v).toFixed(1)}" y1="${y-4}" x2="${x(v).toFixed(1)}" y2="${y+4}" stroke="${vet?'var(--fire)':c}" stroke-width="1.5" opacity=".8"/>`;});
+    g+=r.held
+      ? `<circle cx="${x(r.composite).toFixed(1)}" cy="${y}" r="4.5" fill="${vet?'var(--fire)':c}"/>`
+      : `<circle cx="${x(r.composite).toFixed(1)}" cy="${y}" r="4.5" fill="#0b0f14" stroke="${vet?'var(--fire)':c}" stroke-width="1.8"/>`;
+    g+=`<text x="${W-R+8}" y="${y+3.5}" fill="#7c8b9a" font-size="10" font-family="ui-monospace,monospace">${r.composite.toFixed(1)}±${r.interval.toFixed(1)}</text>`;});
+
+  // the promotion rule, drawn where it is decided: how far each bench name
+  // still has to travel to displace the weakest holding.
+  const heldRows=rows.filter(r=>r.held);
+  if(heldRows.length){
+    const wk=heldRows[heldRows.length-1];
+    const wy=T+rows.indexOf(wk)*rowH+rowH/2;
+    g+=`<rect x="${L-6}" y="${wy-rowH/2+1}" width="${W-L-R+12}" height="${rowH-2}" fill="#4fd1c5" opacity=".045"/>`;
+    g+=`<text x="62" y="${wy+13}" fill="#5b6b7a" font-size="8" font-family="ui-monospace,monospace" letter-spacing=".5">weakest</text>`;
+    rows.forEach((r,i)=>{
+      if(r.held||r.veto&&r.veto.length)return;
+      const y=T+i*rowH+rowH/2;
+      const need=Math.sqrt(r.interval*r.interval+wk.interval*wk.interval)+S.cfg.margin;
+      const short=Math.round(((wk.composite+need)-r.composite)*10)/10;
+      const clears=short<=0, opaque=r.interval>S.cfg.opacity;
+      g+=`<text x="${W-R+8}" y="${y+13}" fill="${opaque?'#e05a47':clears?'#5ec27a':'#5b6b7a'}" font-size="8" font-family="ui-monospace,monospace">${
+        opaque?'too opaque':clears?'clears':'needs +'+short.toFixed(1)}</text>`;});}
+  host.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Quality scores with error bars">${g}</svg>`;
+}
+
+/* ══════════════════ 10 · RENDER ══════════════════ */
+function renderKPIs(){
+  const run=lastRun(), nav=navOf(S.holdings,S.cash), held=Object.keys(S.holdings);
+  const sc=run?run.scores:{};
+  const qs=held.filter(t=>sc[t]).map(t=>sc[t].composite);
+  const avg=qs.length?qs.reduce((a,b)=>a+b,0)/qs.length:NaN;
+  const iv=held.filter(t=>sc[t]).map(t=>sc[t].interval);
+  const avgIv=iv.length?iv.reduce((a,b)=>a+b,0)/iv.length:NaN;
+  const bk=held.filter(t=>sc[t]).map(t=>sc[t].backed);
+  const avgBk=bk.length?bk.reduce((a,b)=>a+b,0)/bk.length:NaN;
+  const weakest=held.filter(t=>sc[t]).sort((a,b)=>sc[a].composite-sc[b].composite)[0];
+  const days=S.runs.length>1?Math.round((new Date(run.ts)-new Date(S.runs[S.runs.length-2].ts))/864e5):null;
+  const cell=(k,v,s,c)=>`<div class="kpi"><div class="k">${k}</div><div class="v" ${c?`style="color:${c}"`:''}>${v}</div><div class="s">${s||''}</div></div>`;
+  $('#kpis').innerHTML=[
+    cell('Mean quality',Number.isFinite(avg)?avg.toFixed(1):'—',Number.isFinite(avgIv)?'mean bar ±'+avgIv.toFixed(1):''),
+    cell('Evidence-backed',Number.isFinite(avgBk)?Math.round(avgBk*100)+'%':'—','of score weight on filed figures',
+      Number.isFinite(avgBk)?(avgBk>=.6?'var(--measured)':avgBk>=.35?'var(--mid)':'var(--judged)'):null),
+    cell('Weakest held',weakest||'—',weakest&&sc[weakest]?sc[weakest].composite.toFixed(1)+'±'+sc[weakest].interval.toFixed(1):''),
+    cell('Cash bar',run?run.cashScore.toFixed(0):'—',run?'short rate '+run.shortRate.toFixed(2)+'%':''),
+    cell('NAV',money(nav),held.length+' held · '+S.bench.length+' bench'),
+    cell('Cash',pct(nav>0?S.cash/nav:NaN),money(S.cash)),
+    cell('Decisions made',String(S.ghosts.filter(g=>g.kind==='swap').length),'swaps on record'),
+    cell('Days since last',days==null?'—':String(days),'quarterly data, event-driven cadence')
+  ].join('');
+  $('#hd-nav').textContent=money(nav);
+  $('#hd-q').textContent=Number.isFinite(avg)?avg.toFixed(1):'—';
+  $('#hd-cash').textContent=run?run.cashScore.toFixed(0):'—';
+  $('#hd-run').textContent=String(S.runs.length);
+}
+
+function renderAdjudication(){
+  const run=lastRun(),host=$('#adjudication');
+  if(!run){host.innerHTML='<p class="empty">Record a run to see rule output.</p>';return;}
+  const a=adjudicate(run),out=[];
+  const line=(cls,head,why)=>`<div class="msg ${cls}"><b>${head}</b>${why?`<span class="why">${why}</span>`:''}</div>`;
+  a.flags.forEach(f=>out.push(line('stop','Seal or arithmetic problem',esc(f))));
+  a.veto.forEach(v=>out.push(line('stop',`${esc(v.t)} is vetoed`,esc(v.flags.join(', '))+' — a gate, not a deduction. Remove regardless of score.')));
+  a.floor.forEach(f=>out.push(f.kind==='opacity'
+    ? line('stop',`${esc(f.t)} is too opaque to hold`,`±${f.iv} exceeds the ±${S.cfg.opacity} limit — the score is not a measurement any more`)
+    : line('warn',`${esc(f.t)} sits below the cash bar`,`cash leads by ${f.gap} pts against a ${f.need} pt separation requirement — cash is the better holding`)));
+  a.promote.forEach(p=>out.push(line('go',`Promote ${esc(p.t)} over ${esc(p.vs)}`,`${p.gap} pt gap clears the ${p.need} pt separation these error bars demand`)));
+  a.expand.forEach(e=>out.push(line('go',`${esc(e.t)} qualifies as an addition`,`${e.c} beats the median holding at ${e.median} by more than its own bar; basket is under the ${S.cfg.max} cap`)));
+  a.blocked.forEach(b=>out.push(line('','No promotion for '+esc(b.t),esc(b.why))));
+  a.opp.forEach(o=>out.push(line(o.ok?'go':'warn',`${o.ok?'Allowed':'Rejected'}: ${esc(o.type||'opportunity')} on ${esc(o.t)} (${o.bps}bps)`,esc(o.why.join(' · ')))));
+  a.rotate.forEach(r=>out.push(line('','Rotate '+esc(r.t)+' off the bench',
+    `lowest bench score${r.score!=null?' at '+r.score.toFixed(1):''}; bring one new candidate next run, preferably outside the largest 100`)));
+  a.cap.forEach(c=>out.push(line('warn',`${esc(c.t)} is over the weight ceiling`,`${pct(c.w)} against a ceiling of ${pct(c.ceiling)}`)));
+  if(!out.length)out.push(line('go','No rule fires','Every bar overlaps, nothing sits below cash, no opportunity qualified. Hold is the correct output, and it is the output the rules produced rather than one the model talked itself into.'));
+  if(S.runs.length<2)out.push(line('','Before you trust any of this','Run the same set twice in one sitting with different shuffles. The spread between the two blind scores is your noise floor, and the promotion margin should be set to clear it.'));
+  host.innerHTML=out.join('');
+}
+
+function scoreCell(e){
+  if(!e)return '<span class="chip">unscored</span>';
+  const c=tone(e.backed);
+  return `<span style="font-family:var(--mono);color:var(--${c});font-weight:600">${e.composite.toFixed(1)}</span>`+
+    `<span style="font-family:var(--mono);color:var(--dim)">±${e.interval.toFixed(1)}</span>`;
+}
+function renderBasket(){
+  const run=lastRun(),sc=run?run.scores:{},w=weightsOf(S.holdings,S.cash);
+  const held=Object.keys(S.holdings).sort((a,b)=>(sc[b]?.composite||0)-(sc[a]?.composite||0));
+  $('#basket-count').textContent=held.length+' of '+S.cfg.max;
+  const eq=held.length?1/held.length:0, ceil=eq*S.cfg.ceiling;
+  $('#basket-table').innerHTML=held.length?`<table><thead><tr>
+    <th>Name</th><th class="num">Quality</th><th class="num">Backed</th><th class="num">Shares</th>
+    <th class="num">Price</th><th class="num">Weight</th><th>Tenure</th><th>Flags</th></tr></thead><tbody>`+
+    held.map(t=>{const e=sc[t],h=S.holdings[t],ten=S.runs.length-(h.sinceRun||0);
+      const over=w[t]>ceil+1e-9;
+      const tenTxt=(h.sinceRun||0)<0?'pre-existing':ten+' run'+(ten===1?'':'s');
+      return `<tr><td class="tick">${esc(t)}</td><td class="num">${scoreCell(e)}</td>
+        <td class="num" style="color:var(--${e?tone(e.backed):'dim'})">${e?Math.round(e.backed*100)+'%':'—'}</td>
+        <td class="num">${h.shares.toFixed(4)}</td><td class="num">${h.price.toFixed(2)}</td>
+        <td class="num" ${over?'style="color:var(--judged)"':''}>${pct(w[t])}</td>
+        <td>${tenTxt}${ten<S.cfg.tenure?' <span class="chip">protected</span>':''}</td>
+        <td>${e&&e.veto.length?'<span class="chip f">veto</span>':''}${e&&e.interval>S.cfg.opacity?'<span class="chip f">too opaque</span>':''}${e&&run&&(run.cashScore-e.composite)>Math.sqrt(4+e.interval**2)?'<span class="chip j">below cash</span>':''}${over?'<span class="chip j">over ceiling</span>':''}</td></tr>`;}).join('')+
+    `<tr><td class="tick" style="color:var(--mid)">CASH</td><td class="num">${run?`<span style="font-family:var(--mono);color:var(--mid);font-weight:600">${run.cashScore.toFixed(1)}</span><span style="font-family:var(--mono);color:var(--dim)">±2.0</span>`:'—'}</td>
+      <td class="num" style="color:var(--measured)">100%</td><td class="num">—</td><td class="num">—</td>
+      <td class="num">${pct(w.CASH)}</td><td>—</td><td><span class="chip m">reservation level</span></td></tr></tbody></table>`
+    :'<p class="empty">No holdings yet. Build a prompt with an empty basket and the model will propose one.</p>';
+
+  $('#bench-table').innerHTML=S.bench.length?`<table><thead><tr><th>Name</th><th class="num">Quality</th>
+    <th class="num">Backed</th><th>Standing</th></tr></thead><tbody>`+
+    S.bench.map(t=>{const e=sc[t];
+      const weakest=held.filter(x=>sc[x]).sort((a,b)=>sc[a].composite-sc[b].composite)[0];
+      let st='<span class="chip">waiting</span>';
+      if(e&&e.interval>S.cfg.opacity)st='<span class="chip f">too opaque</span>';
+      else if(e&&weakest&&sc[weakest]&&(e.composite-sc[weakest].composite)>Math.sqrt(e.interval**2+sc[weakest].interval**2)+S.cfg.margin)st='<span class="chip g">clears '+esc(weakest)+'</span>';
+      else if(e&&run&&(run.cashScore-e.composite)>Math.sqrt(4+e.interval**2))st='<span class="chip j">below cash</span>';
+      return `<tr><td class="tick" style="color:var(--mute)">${esc(t)}</td><td class="num">${scoreCell(e)}</td>
+        <td class="num" style="color:var(--${e?tone(e.backed):'dim'})">${e?Math.round(e.backed*100)+'%':'—'}</td><td>${st}</td></tr>`;}).join('')+'</tbody></table>'
+    :'<p class="empty">No bench. The bench is where the counterfactual lives — without it you never learn whether the names you passed on were worse.</p>';
+
+  const det=$('#pillar-detail');
+  if(!run){det.innerHTML='<p class="empty">No scores yet.</p>';return;}
+  det.innerHTML=Object.keys(run.scores).sort().map(t=>{const e=run.scores[t];
+    return `<details><summary>${esc(t)} — ${e.composite.toFixed(1)} ±${e.interval.toFixed(1)} · ${Math.round(e.backed*100)}% evidence-backed</summary><div class="inner">
+      <table><thead><tr><th>Pillar</th><th class="num">w</th><th class="num">Score</th><th>Evidence</th><th>Note</th></tr></thead><tbody>`+
+      PILLARS.map(p=>{const r=(e.pillars||{})[p.k]||{};const cl=EV[r.evidence_class]?r.evidence_class:'E6';
+        const good=cl==='E1'||cl==='E2';
+        return `<tr><td>${p.n}</td><td class="num" style="color:var(--dim)">${p.w}</td>
+          <td class="num">${num(r.score,0)}</td>
+          <td><span class="chip ${good?'m':(cl==='E3'?'':'j')}">${cl} ±${EV[cl].hw}</span></td>
+          <td style="color:var(--mute);font-size:.78rem">${esc((r.note||'').slice(0,150))}</td></tr>`;}).join('')+
+      `</tbody></table>${e.judgements.length?'<p class="note" style="margin-top:10px"><b style="color:var(--judged)">Judgements</b></p>'+
+        e.judgements.map(j=>`<p class="note" style="margin-top:6px">· ${esc(j.claim)}<br><span style="color:var(--dim)">wrong if: ${esc(j.falsifier||'— no falsifier stated —')}</span></p>`).join(''):''}
+      </div></details>`;}).join('');
+}
+
+function renderPlan(){
+  const host=$('#plan'), run=lastRun(), plan=buildPlan(run);
+  if(!plan){host.innerHTML='<p class="empty">Record a run to see the plan.</p>';$('#plan-tag').textContent='—';return;}
+  const n=plan.tiers.length;
+  $('#plan-tag').textContent=n+' quality band'+(n===1?'':'s');
+  const anyVal=plan.rows.some(r=>Number.isFinite(num(r.val&&r.val.fcf_yield_pct,NaN)));
+  let h=`<table><thead><tr><th>Band</th><th>Name</th><th class="num">Quality</th>${anyVal?'<th class="num">FCF yld</th>':''}<th class="num">Now</th><th class="num">Target</th><th class="num">Move</th></tr></thead><tbody>`;
+  plan.rows.sort((a,b)=>a.tier-b.tier||b.composite-a.composite).forEach((r,i,arr)=>{
+    const first=i===0||arr[i-1].tier!==r.tier;
+    const mv=r.delta, big=Math.abs(mv)>0.005;
+    const y=num(r.val&&r.val.fcf_yield_pct,NaN);
+    h+=`<tr><td>${first?`<span class="chip ${r.tier===0?'m':r.tier===n-1?'j':''}">band ${r.tier+1}</span>`:''}</td>
+      <td class="tick">${esc(r.t)}</td><td class="num">${scoreCell(r)}</td>
+      ${anyVal?`<td class="num" style="color:var(--dim)">${Number.isFinite(y)?y.toFixed(1)+'%':'—'}</td>`:''}
+      <td class="num" style="color:var(--dim)">${pct(r.now)}</td><td class="num">${pct(r.target)}</td>
+      <td class="num" style="color:${big?(mv>0?'var(--go)':'var(--judged)'):'var(--dim)'}">${mv>0?'+':''}${(mv*100).toFixed(2)}pt</td></tr>`;});
+  h+=`<tr><td></td><td class="tick" style="color:var(--mid)">CASH</td><td class="num">—</td>${anyVal?'<td></td>':''}
+    <td class="num" style="color:var(--dim)">${pct(plan.cashW)}</td><td class="num">${pct(plan.cashW)}</td><td class="num" style="color:var(--dim)">—</td></tr></tbody></table>`;
+  h+=`<p class="note" style="margin-top:10px">A band is the set of names that cannot be separated from the band leader once error bars are accounted for. Weight is assigned across bands, never between names inside one — tilting on a gap smaller than the bars is tilting on noise.${
+    anyVal?` Valuation moves weight only <b style="color:var(--paper)">within</b> a band, capped at ${S.cfg.valTilt}bps and zero-sum, so it fills exactly the space quality's uncertainty leaves and shrinks as your evidence improves.`:' Supply valuation.fcf_yield_pct to enable the within-band tiebreak.'}</p>`;
+  if(n===1)h+=`<div class="msg warn" style="margin-top:10px"><b>Every holding is in one band.</b><span class="why">On the current error bars these names are not distinguishable on quality, so equal weight is the honest answer and the ranking on the ladder is decorative. That is a real finding, not a bug — but check the evidence classes before accepting it.</span></div>`;
+  host.innerHTML=h;
+}
+function renderLedger(){
+  $('#runs-table').innerHTML=S.runs.length?`<table><thead><tr><th>Date</th><th>Decision</th><th>Model</th>
+    <th class="num">NAV</th><th class="num">Mean Q</th><th>Seal</th><th>Reason</th></tr></thead><tbody>`+
+    S.runs.slice().reverse().map(r=>{const q=Object.keys(r.holdings).filter(t=>r.scores[t]).map(t=>r.scores[t].composite);
+      const avg=q.length?(q.reduce((a,b)=>a+b,0)/q.length).toFixed(1):'—';
+      return `<tr><td class="tick">${esc(r.date)}</td>
+        <td><span class="chip ${r.decision==='HOLD'?'g':'j'}">${esc(r.decision)}</span></td>
+        <td style="color:var(--mute);font-size:.78rem">${esc(r.model)}</td>
+        <td class="num">${money(r.nav)}</td><td class="num">${avg}</td>
+        <td>${r.orderOK?'<span class="chip m">order ok</span>':'<span class="chip f">out of order</span>'}${
+          r.sealState==='verified'?'<span class="chip g">nonce ok</span>':r.sealState==='declined'?'<span class="chip">no history</span>':r.sealState==='not_opened'?'<span class="chip j">unopened</span>':r.sealState==='n/a'?'':'<span class="chip f">'+esc(r.sealState)+'</span>'}${
+          r.revised.length?'<span class="chip j">revised</span>':''}</td>
+        <td style="color:var(--mute);font-size:.78rem">${esc(r.reason.slice(0,180))}${r.reason.length>180?'…':''}</td></tr>`;}).join('')+'</tbody></table>'
+    :'<p class="empty">No runs yet.</p>';
+  renderNav();
+}
+function renderNav(){
+  const host=$('#navchart'),pts=S.runs.filter(r=>Number.isFinite(r.nav));
+  if(pts.length<2){host.innerHTML='<p class="empty">Two runs needed.</p>';return;}
+  const base=pts[0], bl=Number.isFinite(base.spx)?base.spx:null;
+  const nav=pts.map(r=>r.nav);
+  const bm=pts.map(r=>(bl&&Number.isFinite(r.spx))?base.nav*(r.spx/bl):NaN);
+  const all=nav.concat(bm.filter(Number.isFinite));
+  let lo=Math.min(...all),hi=Math.max(...all);if(hi===lo){hi+=1;lo-=1;}
+  const pad=(hi-lo)*.12;lo-=pad;hi+=pad;
+  const W=760,H=230,L=68,R=14,T=14,B=26;
+  const x=i=>L+i/(pts.length-1)*(W-L-R), y=v=>T+(1-(v-lo)/(hi-lo))*(H-T-B);
+  let g='';
+  for(let k=0;k<=4;k++){const yy=T+k/4*(H-T-B);
+    g+=`<line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}" stroke="#263241"/>`;
+    g+=`<text x="8" y="${yy+3.5}" fill="#5b6b7a" font-size="10" font-family="ui-monospace,monospace">${Math.round(hi-k/4*(hi-lo)).toLocaleString()}</text>`;}
+  const path=v=>v.map((p,i)=>Number.isFinite(p)?`${i&&Number.isFinite(v[i-1])?'L':'M'}${x(i).toFixed(1)} ${y(p).toFixed(1)}`:'').join(' ');
+  if(bm.some(Number.isFinite))g+=`<path d="${path(bm)}" fill="none" stroke="#7fa8b8" stroke-width="1.5" opacity=".65"/>`;
+  g+=`<path d="${path(nav)}" fill="none" stroke="#4fd1c5" stroke-width="2"/>`;
+  g+=`<text x="${L}" y="${H-6}" fill="#5b6b7a" font-size="10" font-family="ui-monospace,monospace">${esc(pts[0].date)}</text>`;
+  g+=`<text x="${W-R}" y="${H-6}" fill="#5b6b7a" font-size="10" font-family="ui-monospace,monospace" text-anchor="end">${esc(pts[pts.length-1].date)}</text>`;
+  host.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="NAV against index">${g}</svg>`;
+}
+
+function renderTriggers(){
+  const ts=Object.values(S.triggers);
+  $('#trigger-table').innerHTML=ts.length?`<table><thead><tr><th>Name</th><th>Pillar</th><th>Falsifier</th>
+    <th class="num">Restated</th><th>Status</th><th></th></tr></thead><tbody>`+
+    ts.sort((a,b)=>b.texts.length-a.texts.length).map((x,i)=>
+      `<tr><td class="tick">${esc(x.ticker)}</td><td style="color:var(--mute);font-size:.78rem">${esc(x.pillar)}</td>
+        <td style="color:var(--mute);font-size:.8rem">${esc(x.text)}</td>
+        <td class="num" ${x.texts.length>2?'style="color:var(--judged)"':''}>${x.texts.length}</td>
+        <td><span class="chip ${x.status==='fired'?'f':x.status==='retired'?'':'g'}">${esc(x.status)}</span></td>
+        <td><button class="act" style="padding:4px 8px;font-size:.62rem" data-trig="${i}">cycle</button></td></tr>`).join('')+'</tbody></table>'
+    :'<p class="empty">No triggers yet. They accumulate from the judgements the model is required to state.</p>';
+  $$('#trigger-table [data-trig]').forEach(b=>b.onclick=()=>{
+    const x=Object.values(S.triggers).sort((a,b)=>b.texts.length-a.texts.length)[+b.dataset.trig];
+    x.status=x.status==='pending'?'fired':x.status==='fired'?'retired':'pending';save();renderTriggers();});
+
+  $('#ghost-table').innerHTML=S.ghosts.length?`<table><thead><tr><th>Date</th><th>Kind</th><th>Out</th><th>In</th>
+    <th class="num">Out since</th><th class="num">In since</th></tr></thead><tbody>`+
+    S.ghosts.slice().reverse().map(g=>{const m=ghostMark(g);
+      return `<tr><td class="tick">${esc(g.date)}</td><td><span class="chip">${esc(g.kind)}</span></td>
+        <td class="tick" style="color:var(--mute)">${esc(g.out)}</td><td class="tick">${esc(g.inn)}${g.bps?' <span class="chip">'+g.bps+'bps</span>':''}</td>
+        <td class="num">${m.out==null?'—':pct(m.out)}</td><td class="num">${m.inn==null?'—':pct(m.inn)}</td></tr>`;}).join('')+'</tbody></table>'
+    :'<p class="empty">No ghosts. Nothing has been swapped or incremented yet — which is the honest state of the experiment.</p>';
+}
+
+function renderRubric(){
+  $('#rubric').innerHTML=`<table><thead><tr><th>Pillar</th><th class="num">Weight</th></tr></thead><tbody>`+
+    PILLARS.map(p=>`<tr><td>${p.n}<br><span style="color:var(--dim);font-size:.75rem">${esc(p.anchor)}</span></td>
+      <td class="num">${p.w}</td></tr>`).join('')+'</tbody></table>'+
+    `<p class="note" style="margin-top:12px"><b style="color:var(--paper)">Evidence classes set the bar.</b> `+
+    Object.keys(EV).map(k=>`<code>${k}</code> ±${EV[k].hw} ${EV[k].n}`).join(' · ')+
+    `. A pillar whose note cites a filed number is E3 at worst — over-classing to E5 widens every bar until nothing can separate from anything, which looks like humility and behaves like paralysis. The interval blends the weighted-linear and root-sum-square aggregates 60/40, and widens 25% when three or more pillars fall to E4 or worse — because pillar errors are correlated, not independent.</p>`+
+    `<p class="note"><b style="color:var(--paper)">Degradation costs points.</b> When a pillar's evidence class falls, its score should fall too, not merely widen. Otherwise a company that becomes harder to analyse gets defended by its own opacity.</p>`+
+    `<p class="note"><b style="color:var(--paper)">Separation, not overlap.</b> A trade needs the quality gap to beat <code>&radic;(bar<sub>a</sub>&sup2;+bar<sub>b</sub>&sup2;)</code>. Testing showed the intuitive &ldquo;bars must not overlap&rdquo; rule demands a 7.6 pt gap between two well-documented names and would freeze the basket permanently &mdash; the same absorbing state this design exists to break, dressed in arithmetic.</p>`+
+    `<p class="note"><b style="color:var(--paper)">Cash</b> scores <code>50 + 5 × short rate</code>, capped at 85, with a ±2 bar because the short rate is an E1 figure. A narrow bar makes cash hard for a hazy candidate to displace.</p>`;
+}
+function renderAll(){renderLadder();renderKPIs();renderAdjudication();renderPlan();renderBasket();renderLedger();renderTriggers();renderRubric();writeCfg();}
+
+/* ══════════════════ 11 · CONFIG / IO ══════════════════ */
+function readCfg(){S.cfg.max=clamp(num($('#cfg-max').value,15),8,20);S.cfg.bench=clamp(num($('#cfg-bench').value,5),0,10);
+  S.cfg.tenure=clamp(num($('#cfg-tenure').value,3),0,20);S.cfg.oppcap=clamp(num($('#cfg-oppcap').value,200),0,600);
+  S.cfg.ceiling=clamp(num($('#cfg-ceiling').value,1.5),1,3);S.cfg.margin=clamp(num($('#cfg-margin').value,0),0,10);
+  S.cfg.opacity=clamp(num($('#cfg-opacity').value,15),5,40);
+  S.cfg.initial=clamp(num($('#cfg-initial').value,10),3,20);
+  S.cfg.startCash=Math.max(100,num($('#cfg-cash').value,10000));
+  S.cfg.stale=clamp(num($('#cfg-stale').value,5),1,30);
+  S.cfg.benchRotate=clamp(num($('#cfg-rotate').value,1),0,5);
+  S.cfg.tierSpread=clamp(num($('#cfg-spread').value,0.3),0,0.6);
+  S.cfg.valTilt=clamp(num($('#cfg-valtilt').value,150),0,400);
+  S.news=$('#news').value;}
+function writeCfg(){$('#cfg-max').value=S.cfg.max;$('#cfg-bench').value=S.cfg.bench;$('#cfg-tenure').value=S.cfg.tenure;
+  $('#cfg-oppcap').value=S.cfg.oppcap;$('#cfg-ceiling').value=S.cfg.ceiling;$('#cfg-margin').value=S.cfg.margin;
+  $('#cfg-opacity').value=S.cfg.opacity;$('#cfg-initial').value=S.cfg.initial;
+  $('#cfg-cash').value=S.cfg.startCash;$('#cfg-stale').value=S.cfg.stale;
+  $('#cfg-rotate').value=S.cfg.benchRotate;$('#cfg-spread').value=S.cfg.tierSpread;$('#cfg-valtilt').value=S.cfg.valTilt;
+  if($('#news').value!==S.news)$('#news').value=S.news;}
+
+function download(){readCfg();const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);
+  a.download=`prymis_iv_${new Date().toISOString().slice(0,10)}.json`;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1200);toast('State downloaded');}
+function restore(f){const r=new FileReader();
+  r.onload=()=>{try{const o=JSON.parse(String(r.result));
+    if(!o||!o.version)throw 0;
+    S=Object.assign(JSON.parse(JSON.stringify(BLANK)),o);save();renderAll();toast('State restored');}
+    catch(e){toast('That file is not a Prymis IV state export.',true);}};
+  r.readAsText(f);}
+function seed(f){const r=new FileReader();
+  r.onload=()=>{try{const o=JSON.parse(String(r.result));
+    const pts=o.ledger?.points||o.points||(Array.isArray(o)?o:null);
+    if(!pts||!pts.length)throw 0;
+    const p=pts[pts.length-1];
+    const h={};Object.keys(p.positions||{}).forEach(t=>{const k=tk(t);
+      if(okTicker(k)&&num(p.positions[t])>0&&num((p.prices||{})[t])>0)h[k]={shares:num(p.positions[t]),price:num(p.prices[t]),sinceRun:-99};});
+    if(!Object.keys(h).length)throw 0;
+    S.holdings=h;S.cash=num(p.cash,0);S.cfg.startCash=num(o.ledger?.starting_cash||o.starting_cash,10000);
+    save();renderAll();toast(Object.keys(h).length+' holdings seeded — unscored until the first blind run');}
+    catch(e){toast('Could not read a v3 ledger from that file.',true);}};
+  r.readAsText(f);}
+
+/* ══════════════════ 12 · WIRE ══════════════════ */
+$$('nav button').forEach(b=>b.onclick=()=>{
+  $$('nav button').forEach(x=>x.setAttribute('aria-selected','false'));
+  b.setAttribute('aria-selected','true');
+  $$('.view').forEach(v=>v.classList.toggle('on',v.dataset.view===b.dataset.view));});
+$('#btn-gen').onclick=buildPrompt;
+$('#btn-copy').onclick=()=>{if(!S.lastPrompt)return toast('Build the prompt first.',true);
+  navigator.clipboard.writeText(S.lastPrompt).then(()=>toast('Prompt copied')).catch(()=>toast('Copy blocked — select the text instead.',true));};
+$('#btn-schema').onclick=()=>navigator.clipboard.writeText(JSON.stringify(schema(S.slots),null,2))
+  .then(()=>toast('Schema copied')).catch(()=>toast('Copy blocked.',true));
+$('#btn-add').onclick=()=>{const t=tk(prompt('Ticker to add to the bench:')||'');
+  if(!t)return; if(!okTicker(t))return toast('That is not a usable ticker.',true);
+  if(S.holdings[t]||S.bench.includes(t))return toast(t+' is already in the set.',true);
+  S.bench.push(t);save();renderAll();toast(t+' added to the bench');};
+$('#btn-reveal').onclick=()=>{const el=$('#seal-blob'),b=$('#btn-reveal');
+  if(!el.dataset.sealed)return;
+  const open=b.textContent==='seal';
+  el.textContent=open?el.dataset.sealed:el.dataset.plain;
+  b.textContent=open?'reveal':'seal';};
+$('#btn-record').onclick=record;
+$('#btn-download').onclick=download;
+$('#btn-restore-open').onclick=()=>$('#restore-file').click();
+$('#restore-file').onchange=e=>{if(e.target.files[0])restore(e.target.files[0]);e.target.value='';};
+$('#btn-seed').onclick=()=>$('#seed-file').click();
+$('#seed-file').onchange=e=>{if(e.target.files[0])seed(e.target.files[0]);e.target.value='';};
+$('#btn-reset').onclick=()=>{if(!confirm('Clear everything? Download the state first if you want to keep it.'))return;
+  S=JSON.parse(JSON.stringify(BLANK));save();renderAll();toast('Reset');};
+$('#news').oninput=()=>{S.news=$('#news').value;save();};
+['cfg-max','cfg-bench','cfg-tenure','cfg-oppcap','cfg-ceiling','cfg-margin','cfg-opacity','cfg-initial','cfg-cash','cfg-stale','cfg-rotate','cfg-spread','cfg-valtilt'].forEach(id=>
+  $('#'+id).onchange=()=>{readCfg();save();renderAll();toast('Rules updated');});
+
+load();renderAll();setStorageMsg(true);
+try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){setStorageMsg(false);}
+})();
+</script>
+</body>
+</html>
