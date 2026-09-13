@@ -157,7 +157,7 @@ header h1 .ver{font-style:normal;font-size:.58rem;letter-spacing:.08em;color:var
 </head>
 <body>
 <header>
-  <h1>Prymis <span>IV</span> <em class="ver">v1.3.1</em></h1>
+  <h1>Prymis <span>IV</span> <em class="ver">v1.3.2</em></h1>
   <div class="tagline">Blind quality first · random discovery without cherry-picking · valuation second · bounded quality × value allocation.</div>
   <div class="readout">NAV <b id="hd-nav">—</b> · Q <b id="hd-q">—</b> · Cash bar <b id="hd-cash">—</b> · Run <b id="hd-run">0</b><span id="hd-bm-wrap" style="display:none"> · vs S&amp;P <b id="hd-bm">—</b></span></div>
 </header>
@@ -431,6 +431,8 @@ let S=JSON.parse(JSON.stringify(BLANK));
 
 // Fresh storage namespace: intentionally does not read any earlier Prymis browser state.
 const STORAGE_KEY='prymis_iv_1_3_2_tabula_rasa_state';
+// Isolation guarantee: this fork reads/writes only the key above.
+// Earlier Prymis browser state is ignored unless the user explicitly imports a file.
 function deepCopy(x){return JSON.parse(JSON.stringify(x));}
 function purchaseRunOf(h){
   const a=Number(h&&h.purchasedRun), b=Number(h&&h.sinceRun);
