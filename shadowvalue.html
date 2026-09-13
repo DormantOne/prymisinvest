@@ -1,11 +1,11 @@
 
 <!DOCTYPE html>
-<!-- PRYMIS IV v1.3 RANDOM VALUE · blind quality → locked random discovery → valuation-aware allocation -->
+<!-- PRYMIS IV v1.3.1 GUI REBUILD · blind quality → locked random discovery → valuation-aware allocation -->
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-<title>Prymis IV v1.3 — Quality × Value Instrument</title>
+<title>Prymis IV v1.3.1 — Quality × Value Instrument</title>
 <style>
 :root{
   --ink:#0b0f14; --slate:#131a22; --slate2:#1b242e; --rule:#263241; --rule2:#334255;
@@ -20,10 +20,8 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
 body{background:var(--ink);color:var(--paper);font-family:var(--sans);line-height:1.55;font-size:15px}
-<br>
 /* ---- instrument label: the recurring structural device ---- */
 .eyebrow{font-family:var(--mono);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
-<br>
 header{position:sticky;top:0;z-index:60;background:rgba(11,15,20,.94);backdrop-filter:blur(10px);
   border-bottom:1px solid var(--rule);padding:14px 20px;display:flex;gap:18px;align-items:baseline;flex-wrap:wrap}
 header h1{font-family:var(--mono);font-size:1.05rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
@@ -31,29 +29,24 @@ header h1 span{color:var(--measured)}
 header .tagline{font-size:.82rem;color:var(--mute);flex:1;min-width:200px}
 .readout{font-family:var(--mono);font-size:.78rem;color:var(--mute);white-space:nowrap}
 .readout b{color:var(--paper);font-weight:600}
-<br>
 nav{display:flex;gap:2px;padding:0 20px;border-bottom:1px solid var(--rule);background:var(--ink);
   position:sticky;top:57px;z-index:55;overflow-x:auto}
 nav button{font-family:var(--mono);font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;
   background:none;border:0;border-bottom:2px solid transparent;color:var(--dim);padding:12px 14px;cursor:pointer;white-space:nowrap}
 nav button:hover{color:var(--paper)}
 nav button[aria-selected="true"]{color:var(--measured);border-bottom-color:var(--measured)}
-<br>
 main{max-width:1560px;margin:0 auto;padding:20px}
 .cols{display:grid;grid-template-columns:1.15fr .85fr;gap:20px;align-items:start}.cols>div{min-width:0}
 @media(max-width:1080px){.cols{grid-template-columns:1fr}}
 .view{display:none}.view.on{display:block}
-<br>
 .card{background:var(--slate);border:1px solid var(--rule);border-radius:4px;margin-bottom:18px;min-width:0;max-width:100%}
 .card > h2{font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);
   padding:11px 16px;border-bottom:1px solid var(--rule);font-weight:500;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
 .card .body{padding:16px}
 .card .body > * + *{margin-top:12px}
-<br>
 p.note{font-size:.85rem;color:var(--mute)}
 p.note code{font-family:var(--mono);font-size:.8rem;color:var(--mid)}
 a{color:var(--measured)}
-<br>
 button.act{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
   border:1px solid var(--rule2);background:var(--slate2);color:var(--paper);padding:9px 14px;border-radius:3px;cursor:pointer}
 button.act:hover{border-color:var(--measured);color:var(--measured)}
@@ -64,7 +57,6 @@ button.act:disabled{opacity:.4;cursor:not-allowed}
 button.act:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible,nav button:focus-visible{
   outline:2px solid var(--measured);outline-offset:2px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-<br>
 textarea,input,select{width:100%;background:var(--ink);border:1px solid var(--rule);border-radius:3px;
   color:var(--paper);padding:10px;font-family:var(--mono);font-size:.82rem}
 textarea{resize:vertical;min-height:120px;line-height:1.5}
@@ -74,11 +66,9 @@ label.field span{display:block;font-family:var(--mono);font-size:.66rem;letter-s
   text-transform:uppercase;color:var(--mute);margin-bottom:5px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:600px){.grid2{grid-template-columns:1fr}.readout{white-space:normal;width:100%}header{position:static}nav{position:static}.card .body{overflow-x:auto}main{padding:10px}}
-<br>
 pre.out{background:var(--ink);border:1px solid var(--rule);border-radius:3px;padding:14px;
   font-family:var(--mono);font-size:.74rem;line-height:1.5;color:var(--mute);
   max-height:520px;overflow:auto;white-space:pre-wrap;word-break:break-word}
-<br>
 table{width:100%;border-collapse:collapse;font-size:.82rem}
 th{font-family:var(--mono);font-size:.64rem;letter-spacing:.13em;text-transform:uppercase;color:var(--mute);
   text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);font-weight:500}
@@ -86,25 +76,21 @@ td{padding:9px 10px;border-bottom:1px solid rgba(38,50,65,.55);vertical-align:to
 tr:last-child td{border-bottom:0}
 td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
 .tick{font-family:var(--mono);font-weight:600;letter-spacing:.03em}
-<br>
 .chip{display:inline-block;font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;
   padding:2px 7px;border-radius:2px;border:1px solid var(--rule2);color:var(--mute);white-space:nowrap}
 .chip.m{border-color:rgba(79,209,197,.5);color:var(--measured)}
 .chip.j{border-color:rgba(217,164,65,.5);color:var(--judged)}
 .chip.f{border-color:rgba(224,90,71,.6);color:var(--fire)}
 .chip.g{border-color:rgba(94,194,122,.5);color:var(--go)}
-<br>
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:1px;background:var(--rule)}
 .kpi{background:var(--slate);padding:12px 14px}
 .kpi .k{font-family:var(--mono);font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;color:var(--dim)}
 .kpi .v{font-family:var(--mono);font-size:1.22rem;font-weight:600;margin-top:3px;font-variant-numeric:tabular-nums}
 .kpi .s{font-family:var(--mono);font-size:.66rem;color:var(--mute);margin-top:2px}
-<br>
 .msg{border-left:2px solid var(--rule2);padding:9px 12px;font-size:.84rem;color:var(--mute);background:rgba(27,36,46,.5);overflow-wrap:anywhere}
 .msg.go{border-left-color:var(--go)} .msg.warn{border-left-color:var(--judged)} .msg.stop{border-left-color:var(--fire)}
 .msg b{color:var(--paper);font-weight:600}
 .msg .why{display:block;margin-top:3px;font-family:var(--mono);font-size:.72rem;color:var(--dim)}
-<br>
 .empty{font-size:.85rem;color:var(--dim);font-style:italic;padding:6px 0}
 details{border:1px solid var(--rule);border-radius:3px;background:var(--ink)}
 details > summary{cursor:pointer;padding:9px 12px;font-family:var(--mono);font-size:.72rem;
@@ -114,7 +100,6 @@ details > summary::before{content:"▸ ";color:var(--dim)}
 details[open] > summary::before{content:"▾ "}
 details > summary:hover{color:var(--paper)}
 details .inner{padding:0 12px 12px}
-<br>
 #toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,26px);opacity:0;pointer-events:none;
   background:var(--slate2);border:1px solid var(--rule2);border-left:3px solid var(--measured);
   color:var(--paper);font-family:var(--mono);font-size:.76rem;padding:11px 16px;border-radius:3px;z-index:99;
@@ -126,23 +111,56 @@ svg{display:block;width:100%;height:auto}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:.66rem;color:var(--dim);margin-top:10px}
 .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}
 .legend i.dash{width:16px;height:0;border-radius:0;border-top:1.6px dashed var(--mid);vertical-align:2px}
-<br>
 /* ---- benchmark bookkeeping: recorded plainly, kept out of the rules ---- */
 label.chk{display:flex;gap:9px;align-items:center;cursor:pointer;
   font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
 label.chk input{width:auto;padding:0;accent-color:var(--measured)}
 label.chk:hover{color:var(--paper)}
 input.spxin{width:106px;padding:5px 8px;font-size:.75rem;text-align:right}
+
+/* ---- v1.3.1 workflow shell: preserve the v1.2 instrument, clarify the sequence ---- */
+header h1 .ver{font-style:normal;font-size:.58rem;letter-spacing:.08em;color:var(--dim);margin-left:7px;font-weight:500}
+.workflow-shell{position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(19,26,34,.98),rgba(15,21,28,.98));border:1px solid var(--rule2);border-radius:6px;margin-bottom:18px;box-shadow:0 18px 45px rgba(0,0,0,.18)}
+.workflow-shell:before{content:"";position:absolute;inset:0 auto auto 0;width:100%;height:2px;background:linear-gradient(90deg,var(--measured),rgba(79,209,197,.08) 65%,transparent)}
+.workflow-head{padding:17px 18px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:18px;border-bottom:1px solid var(--rule)}
+.workflow-head h2{font-size:1.03rem;font-weight:600;letter-spacing:-.01em;margin-top:3px}
+.workflow-head h2 em{font-style:normal;color:var(--measured)}
+.workflow-state{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;border:1px solid var(--rule2);border-radius:999px;padding:6px 9px;color:var(--mute);white-space:nowrap}
+.workflow-state.go{border-color:rgba(94,194,122,.45);color:var(--go);background:rgba(94,194,122,.07)}
+.workflow-state.warn{border-color:rgba(217,164,65,.5);color:var(--judged);background:rgba(217,164,65,.07)}
+.workflow-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--rule);border-bottom:1px solid var(--rule)}
+.flow-step{background:var(--slate);padding:13px 12px;display:flex;gap:10px;min-height:76px;align-items:flex-start;position:relative}
+.flow-step:after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:transparent}
+.flow-step.active{background:#17212a}.flow-step.active:after{background:var(--measured)}
+.flow-step.done:after{background:rgba(94,194,122,.65)}
+.flow-step .flow-num{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;color:var(--dim);padding-top:2px}
+.flow-step b{display:block;font-family:var(--mono);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;color:var(--paper)}
+.flow-step small{display:block;margin-top:5px;font-size:.73rem;line-height:1.32;color:var(--mute)}
+.flow-step.done .flow-num,.flow-step.done b{color:var(--go)}
+.flow-step.active .flow-num,.flow-step.active b{color:var(--measured)}
+.workflow-bottom{padding:11px 16px;display:grid;grid-template-columns:auto auto 1fr;gap:10px 16px;align-items:center}
+.logic-pair{display:flex;align-items:center;gap:8px;font-size:.72rem;color:var(--mute);white-space:nowrap}
+.logic-tag{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;padding:3px 6px;border-radius:2px;border:1px solid var(--rule2)}
+.logic-tag.gate{color:var(--measured);border-color:rgba(79,209,197,.35)}
+.logic-tag.throttle{color:var(--judged);border-color:rgba(217,164,65,.35)}
+.flow-detail{font-family:var(--mono);font-size:.7rem;color:var(--dim);text-align:right;overflow-wrap:anywhere}
+.handoff{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--rule);background:rgba(11,15,20,.55);padding:10px 11px;border-radius:3px}
+.handoff-num{width:23px;height:23px;display:grid;place-items:center;border-radius:50%;font-family:var(--mono);font-size:.66rem;font-weight:700;color:#06231f;background:var(--measured);flex:0 0 auto}
+.handoff b{display:block;font-size:.8rem;font-weight:600}.handoff small{display:block;color:var(--mute);font-size:.72rem;line-height:1.35;margin-top:2px}
+#universe-msg{border-left-width:3px}
+#prompt-out{min-height:150px;max-height:360px}
+#paste{min-height:260px}
+.card.sequence-card{border-color:var(--rule2)}
+@media(max-width:1180px){.workflow-grid{grid-template-columns:repeat(3,1fr)}.workflow-bottom{grid-template-columns:1fr}.flow-detail{text-align:left}.logic-pair{white-space:normal}}
+@media(max-width:720px){.workflow-grid{grid-template-columns:1fr}.workflow-head{flex-direction:column}.workflow-bottom{padding:12px}.flow-step{min-height:auto}.logic-pair{align-items:flex-start}}
 </style>
 </head>
 <body>
-<br>
 <header>
-  <h1>Prymis <span>IV</span></h1>
-  <div class="tagline">Blind quality first. Three locked random discoveries. Valuation second. Allocation uses quality × relative value; NAV stays ledger-authoritative.</div>
+  <h1>Prymis <span>IV</span> <em class="ver">v1.3.1</em></h1>
+  <div class="tagline">Blind quality first · random discovery without cherry-picking · valuation second · bounded quality × value allocation.</div>
   <div class="readout">NAV <b id="hd-nav">—</b> · Q <b id="hd-q">—</b> · Cash bar <b id="hd-cash">—</b> · Run <b id="hd-run">0</b><span id="hd-bm-wrap" style="display:none"> · vs S&amp;P <b id="hd-bm">—</b></span></div>
 </header>
-<br>
 <nav role="tablist">
   <button role="tab" aria-selected="true" data-view="run">Run</button>
   <button role="tab" aria-selected="false" data-view="basket">Basket &amp; Bench</button>
@@ -150,13 +168,32 @@ input.spxin{width:106px;padding:5px 8px;font-size:.75rem;text-align:right}
   <button role="tab" aria-selected="false" data-view="triggers">Triggers &amp; Ghosts</button>
   <button role="tab" aria-selected="false" data-view="data">Rubric &amp; Data</button>
 </nav>
-<br>
 <main>
-<br>
 <!-- ═══════════════ RUN ═══════════════ -->
 <section class="view on" data-view="run">
+  <div class="workflow-shell">
+    <div class="workflow-head">
+      <div>
+        <div class="eyebrow">Review sequence</div>
+        <h2>Quality decides <em>what may be owned.</em> Value decides <em>how hard to lean.</em></h2>
+      </div>
+      <div class="workflow-state" id="flow-state">READY</div>
+    </div>
+    <div class="workflow-grid" id="workflow-grid">
+      <div class="flow-step" data-flow="universe"><span class="flow-num">01</span><div><b>Explore</b><small>draw 3 random U.S. operating stocks · lock the draw</small></div></div>
+      <div class="flow-step" data-flow="quality"><span class="flow-num">02</span><div><b>Blind quality</b><small>score every name · no price · no held/bench identity</small></div></div>
+      <div class="flow-step" data-flow="value"><span class="flow-num">03</span><div><b>Open value</b><small>FCF yield only after quality is frozen</small></div></div>
+      <div class="flow-step" data-flow="allocate"><span class="flow-num">04</span><div><b>Allocate</b><small>quality band × bounded relative-value multiplier</small></div></div>
+      <div class="flow-step" data-flow="ledger"><span class="flow-num">05</span><div><b>Commit</b><small>self-financing ledger · benchmark remains outside the rules</small></div></div>
+    </div>
+    <div class="workflow-bottom">
+      <div class="logic-pair"><span class="logic-tag gate">QUALITY GATE</span><span>cheapness can never rescue weak quality</span></div>
+      <div class="logic-pair"><span class="logic-tag throttle">VALUE THROTTLE</span><span>among qualified names, undervaluation can increase weight — within caps</span></div>
+      <div class="flow-detail" id="flow-detail">Load the ticker universe to begin.</div>
+    </div>
+  </div>
   <div class="card">
-    <h2><span>Quality ladder — the only chart that decides anything</span><span class="eyebrow" id="ladder-date">no runs yet</span></h2>
+    <h2><span>Quality ladder — admission & promotion gate</span><span class="eyebrow" id="ladder-date">no runs yet</span></h2>
     <div class="body">
       <div id="ladder"></div>
       <div class="legend">
@@ -168,30 +205,26 @@ input.spxin{width:106px;padding:5px 8px;font-size:.75rem;text-align:right}
       </div>
     </div>
   </div>
-<br>
   <div class="cols">
     <div>
       <div class="card">
         <h2>Adjudication — what the rules say</h2>
         <div class="body" id="adjudication"><p class="empty">Record a run to see rule output.</p></div>
       </div>
-<br>
       <div class="card">
         <h2><span>Quality × value allocation policy</span><span class="eyebrow" id="plan-tag">—</span></h2>
         <div class="body" id="plan"><p class="empty">Record a run to see the plan.</p></div>
       </div>
-<br>
       <div class="card">
         <h2>Position</h2>
         <div class="body"><div class="kpis" id="kpis"></div></div>
       </div>
     </div>
-<br>
     <div>
       <div class="card">
-        <h2><span>1 · Build the prompt</span><span class="eyebrow" id="shuffle-tag">—</span></h2>
+        <h2><span>1 · Lock discovery + build research packet</span><span class="eyebrow" id="shuffle-tag">—</span></h2>
         <div class="body">
-          <p class="note">Candidates are shuffled and stripped of held/bench status. History is sealed into a base64 block the model is told to open only after it has emitted its blind scores.</p>
+          <p class="note">Build once per review. Prymis locks three random operating-company symbols, mixes them invisibly with held and bench names, then shuffles every candidate. The model must finish blind quality scoring before valuation is opened; history stays sealed until both are complete.</p>
           <div class="msg" id="universe-msg"><b>Ticker universe loading…</b><span class="why">Three random operating-company symbols are drawn from the full U.S. exchange universe and locked until the run is recorded.</span></div>
           <div class="row">
             <button class="act" id="btn-universe-refresh">Refresh ticker universe</button>
@@ -199,16 +232,16 @@ input.spxin{width:106px;padding:5px 8px;font-size:.75rem;text-align:right}
             <input type="file" id="universe-files" accept=".txt,.json,text/plain,application/json" multiple style="display:none">
           </div>
           <div class="row">
-            <button class="act primary" id="btn-gen">Build prompt</button>
-            <button class="act" id="btn-copy">Copy</button>
+            <button class="act primary" id="btn-gen">Lock 3 + build prompt</button>
+            <button class="act" id="btn-copy">Copy research packet</button>
             <button class="act" id="btn-add">Add a name</button>
           </div>
+          <div class="handoff"><span class="handoff-num">2</span><div><b>Run the copied packet in a frontier model with web access.</b><small>The packet itself enforces: blind quality → valuation-after-freeze → sealed history → decision. Then paste the returned JSON below.</small></div></div>
           <label class="field"><span>Events to triage (optional)</span>
             <textarea id="news" placeholder="Filings, litigation, management changes, debt actions. Not price moves."></textarea></label>
           <pre class="out" id="prompt-out">Press Build prompt.</pre>
         </div>
       </div>
-<br>
       <div class="card">
         <h2><span>Sealed history</span><span class="row" style="gap:8px"><span class="eyebrow" id="seal-nonce">no nonce</span><button class="act" id="btn-reveal" style="padding:4px 9px;font-size:.62rem">reveal</button></span></h2>
         <div class="body">
@@ -216,14 +249,13 @@ input.spxin{width:106px;padding:5px 8px;font-size:.75rem;text-align:right}
           <pre class="out" id="seal-blob" style="max-height:150px">Build a prompt to seal the current history.</pre>
         </div>
       </div>
-<br>
       <div class="card">
-        <h2>2 · Record the reply</h2>
+        <h2>3 · Paste reply + record the run</h2>
         <div class="body">
           <label class="field"><span>Paste the model's JSON</span>
             <textarea id="paste" class="tall" placeholder="Paste the full reply. Fenced blocks are fine."></textarea></label>
           <div class="row">
-            <button class="act primary" id="btn-record">Record run</button>
+            <button class="act primary" id="btn-record">Validate + record run</button>
             <button class="act" id="btn-schema">Copy schema</button>
           </div>
           <div id="parse-msg"></div>
@@ -232,7 +264,6 @@ input.spxin{width:106px;padding:5px 8px;font-size:.75rem;text-align:right}
     </div>
   </div>
 </section>
-<br>
 <!-- ═══════════════ BASKET ═══════════════ -->
 <section class="view" data-view="basket">
   <div class="card">
@@ -248,14 +279,12 @@ input.spxin{width:106px;padding:5px 8px;font-size:.75rem;text-align:right}
     <div class="body" id="pillar-detail"><p class="empty">No scores yet.</p></div>
   </div>
 </section>
-<br>
 <!-- ═══════════════ LEDGER & BENCHMARK ═══════════════ -->
 <section class="view" data-view="ledger">
   <div class="card">
     <h2><span>Runs</span><span class="eyebrow">newest first</span></h2>
     <div class="body" id="runs-table"><p class="empty">No runs yet.</p></div>
   </div>
-<br>
   <div class="card">
     <h2><span>NAV against the S&amp;P 500</span><span class="eyebrow" id="bm-tag">no index levels yet</span></h2>
     <div class="body">
@@ -281,7 +310,6 @@ input.spxin{width:106px;padding:5px 8px;font-size:.75rem;text-align:right}
     </div>
   </div>
 </section>
-<br>
 <!-- ═══════════════ TRIGGERS ═══════════════ -->
 <section class="view" data-view="triggers">
   <div class="card">
@@ -299,7 +327,6 @@ input.spxin{width:106px;padding:5px 8px;font-size:.75rem;text-align:right}
     </div>
   </div>
 </section>
-<br>
 <!-- ═══════════════ DATA ═══════════════ -->
 <section class="view" data-view="data">
   <div class="cols">
@@ -347,6 +374,10 @@ input.spxin{width:106px;padding:5px 8px;font-size:.75rem;text-align:right}
         </div>
       </div>
       <div class="card">
+        <h2><span>Random discovery audit</span><span class="eyebrow" id="random-audit-tag">—</span></h2>
+        <div class="body" id="random-audit"><p class="empty">No random draws recorded yet.</p></div>
+      </div>
+      <div class="card">
         <h2>Backup</h2>
         <div class="body">
           <p class="note">Browser storage is best-effort and may be unavailable. The downloaded file is the real archive.</p>
@@ -362,16 +393,14 @@ input.spxin{width:106px;padding:5px 8px;font-size:.75rem;text-align:right}
     </div>
   </div>
 </section>
-<br>
 </main>
 <div id="toast" role="status" aria-live="polite"></div>
-<br>
 <script>
 (function(){
 'use strict';
 
 /* ══════════════════ 1 · RUBRIC ══════════════════ */
-const VERSION='prymis_iv_1_3';
+const VERSION='prymis_iv_1_3_1';
 const RANDOM_DRAWS=3;
 const PILLARS=[
   {k:'balance_sheet',   n:'Balance-sheet safety',        w:20, anchor:'90+: survives a severe cycle with no external financing. 70-89: sound, one identifiable dependency. 50-69: refinancing or coverage exposure. <50: impaired.'},
@@ -520,6 +549,11 @@ function normalizeUniverseRows(rows){
   (rows||[]).forEach(r=>{const obj=typeof r==='string'?{symbol:r,name:''}:r||{},t=normalizeUniverseSymbol(obj.symbol);if(!okTicker(t))return;if(!all.has(t))all.set(t,{symbol:t,name:String(obj.name||''),industry:String(obj.industry||''),sector:String(obj.sector||'')});if(investableUniverseRow({...obj,symbol:t}))eligible.add(t);});
   return {all:[...all.keys()].sort(),eligible:[...eligible].sort()};
 }
+async function fetchTimed(url,kind='text',ms=7000){
+  const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),ms);
+  try{const r=await fetch(url,{cache:'no-store',signal:ctl.signal});if(!r.ok)throw new Error('HTTP '+r.status);return kind==='json'?await r.json():await r.text();}
+  finally{clearTimeout(timer);}
+}
 function parseNasdaqTxt(text){
   const rows=[],ls=String(text||'').split(/\r?\n/).filter(Boolean);if(!ls.length)return rows;const hdr=ls[0].split('|');
   const symI=Math.max(0,hdr.findIndex(x=>/^(Symbol|ACT Symbol)$/i.test(x))),nameI=hdr.findIndex(x=>/Security Name/i.test(x)),etfI=hdr.findIndex(x=>/^ETF$/i.test(x)),testI=hdr.findIndex(x=>/Test Issue/i.test(x));
@@ -532,13 +566,13 @@ async function loadSymbolUniverse(force=false){
   let rows=[],source='';
   const direct=['https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt','https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt'];
   try{
-    const rr=await Promise.all(direct.map(u=>fetch(u,{cache:'no-store'}).then(x=>{if(!x.ok)throw new Error('HTTP '+x.status);return x.text();})));
+    const rr=await Promise.all(direct.map(u=>fetchTimed(u,'text',7000)));
     rows=rr.flatMap(parseNasdaqTxt);source='Nasdaq Trader symbol directory';
   }catch(e){
     try{
       const base='https://cdn.jsdelivr.net/gh/rreichel3/US-Stock-Symbols@main/';
       const urls=['nasdaq/nasdaq_full_tickers.json','nyse/nyse_full_tickers.json','amex/amex_full_tickers.json'].map(x=>base+x);
-      const rr=await Promise.all(urls.map(u=>fetch(u,{cache:'no-store'}).then(x=>{if(!x.ok)throw new Error('HTTP '+x.status);return x.json();})));
+      const rr=await Promise.all(urls.map(u=>fetchTimed(u,'json',7000)));
       rows=rr.flat();source='US-Stock-Symbols nightly mirror (NASDAQ/NYSE/AMEX)';
     }catch(e2){renderUniverseStatus('Could not refresh online. Import Nasdaq symbol files, or restore a state file that already contains the universe.');return false;}
   }
@@ -550,7 +584,7 @@ function renderUniverseStatus(err){
   if(err){el.className='msg warn';el.innerHTML='<b>Random universe unavailable.</b><span class="why">'+esc(err)+'</span>';$('#btn-gen').disabled=true;return;}
   if(n<500){el.className='msg warn';el.innerHTML='<b>Random universe not loaded.</b><span class="why">Refresh online or import complete symbol files before building a prompt.</span>';$('#btn-gen').disabled=true;return;}
   el.className='msg go';const pend=(S.pendingRandom||[]).length?` · locked draw: ${(S.pendingRandom||[]).join(', ')}`:'';
-  el.innerHTML=`<b>${n.toLocaleString()} investable symbols ready.</b><span class="why">${esc(m.source||'stored universe')} · source rows ${num(m.allCount,n).toLocaleString()} · loaded ${String(m.loadedAt||'').slice(0,10)||'from state'}${pend}. Random draws are without replacement until the universe is exhausted.</span>`;$('#btn-gen').disabled=false;
+  el.innerHTML=`<b>${n.toLocaleString()} investable symbols ready.</b><span class="why">${esc(m.source||'stored universe')} · source rows ${num(m.allCount,n).toLocaleString()} · loaded ${String(m.loadedAt||'').slice(0,10)||'from state'}${pend}. Random draws are without replacement until the universe is exhausted.</span>`;$('#btn-gen').disabled=false;if(typeof renderWorkflow==='function')renderWorkflow();
 }
 function drawRandomDiscovery(){
   if((S.pendingRandom||[]).length===RANDOM_DRAWS)return S.pendingRandom.slice();
@@ -1414,7 +1448,34 @@ function renderRubric(){
     `<p class="note"><b style="color:var(--paper)">Quality and valuation are sequenced, not blended.</b> Quality is frozen first. The app then fits a robust log-FCF-yield versus quality relationship across the measurable scored set. A name whose yield is 25% above the yield implied by its quality is relatively undervalued by +25% for this peer set; this is not a DCF or price target. Evidence class and the quality error bar attenuate the allocation signal.</p>`+
     `<p class="note"><b style="color:var(--paper)">The S&amp;P 500 is not in the rubric.</b> It is recorded once per run, charted under Ledger &amp; S&amp;P, and read by nothing. Relative return cannot leak into a promotion, floor or weight.</p>`;
 }
-function renderAll(){renderLadder();renderKPIs();renderAdjudication();renderPlan();renderBasket();renderLedger();renderTriggers();renderRubric();writeCfg();renderUniverseStatus();}
+function renderWorkflow(){
+  const steps=[...document.querySelectorAll('.flow-step')],state=$('#flow-state'),detail=$('#flow-detail');
+  if(!steps.length||!state||!detail)return;
+  steps.forEach(x=>x.classList.remove('done','active'));
+  const universe=(S.symbolUniverse||[]).length>=500, draw=(S.pendingRandom||[]).length===RANDOM_DRAWS, built=!!(S.lastPrompt&&draw), paste=!!($('#paste')&&$('#paste').value.trim());
+  const mark=(name,cls)=>{const el=document.querySelector(`.flow-step[data-flow="${name}"]`);if(el)el.classList.add(cls);};
+  if(!universe){mark('universe','active');state.className='workflow-state warn';state.textContent='NEEDS UNIVERSE';detail.textContent='Refresh the U.S. symbol directory or import the Nasdaq symbol files.';return;}
+  mark('universe',draw?'done':'active');
+  if(draw&&!paste)mark('quality','active');
+  if(paste){mark('quality','done');mark('value','done');mark('allocate','done');mark('ledger','active');}
+  if(!draw){state.className='workflow-state go';state.textContent='READY TO DRAW';detail.textContent=`${(S.symbolUniverse||[]).length.toLocaleString()} eligible symbols loaded · Build prompt will lock 3 unseen random names.`;return;}
+  const names=(S.pendingRandom||[]).join(' · ');
+  if(!built){state.className='workflow-state go';state.textContent='DRAW LOCKED';detail.textContent=`Locked random audit draw: ${names}. Build the research packet; the model will not be told which names are random.`;return;}
+  if(!paste){state.className='workflow-state go';state.textContent='PACKET READY';detail.textContent=`Random draw locked: ${names} · copy the packet, run it externally, then paste the JSON reply.`;return;}
+  state.className='workflow-state warn';state.textContent='REPLY READY';detail.textContent='Paste detected · Record run will validate sequence, quality, valuation coverage, allocation caps, and ledger continuity.';
+}
+
+function renderRandomAudit(){
+  const host=$('#random-audit'),tag=$('#random-audit-tag');if(!host||!tag)return;
+  const n=(S.symbolUniverse||[]).length,seen=(S.randomSeen||[]).length,pending=(S.pendingRandom||[]),runs=(S.runs||[]).filter(r=>(r.randomDraw||[]).length);
+  tag.textContent=`${n.toLocaleString()} symbols · ${seen.toLocaleString()} sampled`;
+  let h=`<div class="kpis"><div class="kpi"><div class="k">Eligible universe</div><div class="v">${n?n.toLocaleString():'—'}</div><div class="s">operating-stock filter</div></div><div class="kpi"><div class="k">Ever sampled</div><div class="v">${seen.toLocaleString()}</div><div class="s">without replacement until exhausted</div></div><div class="kpi"><div class="k">Current locked draw</div><div class="v" style="font-size:.9rem">${pending.length?pending.map(esc).join(' · '):'—'}</div><div class="s">reroll disabled inside a review</div></div></div>`;
+  if(runs.length){h+=`<table style="margin-top:12px"><thead><tr><th>Run</th><th>Date</th><th>Locked randoms</th></tr></thead><tbody>`+runs.slice(-8).reverse().map(r=>`<tr><td class="num">${num(r.runIndex,0)+1}</td><td>${esc(r.date||'')}</td><td class="tick">${(r.randomDraw||[]).map(esc).join(' · ')}</td></tr>`).join('')+'</tbody></table>';}
+  else h+='<p class="note" style="margin-top:10px">The first accepted run will permanently record its three random exploration names here.</p>';
+  host.innerHTML=h;
+}
+
+function renderAll(){renderLadder();renderKPIs();renderAdjudication();renderPlan();renderBasket();renderLedger();renderTriggers();renderRubric();renderRandomAudit();writeCfg();renderUniverseStatus();renderWorkflow();}
 
 /* ══════════════════ 11 · CONFIG / IO ══════════════════ */
 function readCfg(){S.cfg.max=clamp(num($('#cfg-max').value,15),8,20);S.cfg.bench=clamp(num($('#cfg-bench').value,5),0,10);
@@ -1471,6 +1532,7 @@ $('#btn-gen').onclick=()=>{try{buildPrompt();}catch(e){toast(e.message||'Could n
 $('#btn-universe-refresh').onclick=()=>loadSymbolUniverse(true);
 $('#btn-universe-import').onclick=()=>$('#universe-files').click();
 $('#universe-files').onchange=async e=>{try{if(e.target.files.length){const u=await importUniverseFiles(e.target.files);toast(`Universe imported · ${u.eligible.length} eligible symbols`);}}catch(err){toast(err.message||'Could not import symbol files.',true);}e.target.value='';};
+$('#paste').addEventListener('input',renderWorkflow);
 $('#btn-copy').onclick=()=>{if(!S.lastPrompt)return toast('Build the prompt first.',true);
   navigator.clipboard.writeText(S.lastPrompt).then(()=>toast('Prompt copied')).catch(()=>toast('Copy blocked — select the text instead.',true));};
 $('#btn-schema').onclick=()=>navigator.clipboard.writeText(JSON.stringify(schema(S.slots),null,2))
